@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  background: #121212;
+  color: #e0e0e0;
+  font-family: sans-serif;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#toolbar {
+  padding: 8px;
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+#grid {
+  flex: 1;
+  overflow: auto;
+}

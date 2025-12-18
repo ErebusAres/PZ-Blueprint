@@ -1,0 +1,8 @@
+.tile {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #2a2a2a;
+  box-sizing: border-box;
+  background: #1a1a1a;
+  cursor: pointer;
+}
