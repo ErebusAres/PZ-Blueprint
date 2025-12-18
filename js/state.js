@@ -15,3 +15,7 @@ export let zoomLevel = 1;
 export function setBlueprintData(data) {
   blueprintData = data;
 }
+
+export function setMode(mode) {
+  currentMode = mode;
+}

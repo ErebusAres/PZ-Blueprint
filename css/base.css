@@ -17,7 +17,22 @@ body {
   border-bottom: 1px solid #333;
 }
 
-#grid {
-  flex: 1;
-  overflow: auto;
+#grid-wrapper {
+  position: relative;
+  display: inline-block; /* shrink-wrap to grid */
 }
+
+#grid {
+  position: relative;
+  z-index: 1;
+}
+
+#wall-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+

@@ -1,8 +1,137 @@
+/* =========================================================
+   TILE BASE
+   ========================================================= */
+
 .tile {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #2a2a2a;
-  box-sizing: border-box;
-  background: #1a1a1a;
-  cursor: pointer;
+    width: 40px;
+    height: 40px;
+    box-sizing: border-box;
+
+    /* visual */
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    cursor: pointer;
+
+    /* layering */
+    position: relative;
+    z-index: 0;
 }
+
+
+/* =========================================================
+   FLOOR LAYER
+   ========================================================= */
+
+.floor {
+    position: absolute;
+    inset: 0;
+
+    background: #3a3a3a;
+
+    /* floors sit above tile base, below everything else */
+    z-index: 1;
+
+    /* floors never intercept input */
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   WALLS (PERMANENT, FLUSH JOINED)
+   ========================================================= */
+
+.wall {
+  position: absolute;
+  background: #f2f2f2;
+  pointer-events: none;
+}
+
+/* thickness */
+:root {
+  --wall: 2px;
+}
+
+/* NORTH */
+.wall-n {
+  width: 41px;
+  height: var(--wall);
+  transform: translateY(-1px);
+}
+
+/* SOUTH */
+.wall-s {
+  width: 41px;
+  height: var(--wall);
+}
+
+/* EAST */
+.wall-e {
+  width: var(--wall);
+  height: 41px;
+  transform: translateX(-1px);
+}
+
+/* WEST */
+.wall-w {
+  width: var(--wall);
+  height: 41px;
+}
+
+/* horizontal */
+.wall-n,
+.wall-s {
+  width: 42px; /* WAS 40px */
+  height: var(--wall);
+}
+
+/* vertical */
+.wall-e,
+.wall-w {
+  width: var(--wall);
+  height: 42px; /* WAS 40px */
+}
+
+/* =========================================================
+   WALL PREVIEW (HOVER ONLY)
+   ========================================================= */
+
+.tile.wall-preview-n::before,
+.tile.wall-preview-e::before {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.tile.wall-preview-n::before {
+  top: -1px;
+  left: -1px;
+  width: calc(100% + 2px);
+  height: 2px;
+}
+
+.tile.wall-preview-e::before {
+  top: -1px;
+  right: -1px;
+  width: 2px;
+  height: calc(100% + 4px);
+}
+
+
+/* =========================================================
+   FUTURE-PROOFING NOTES
+   ========================================================= */
+/*
+Layer order (do not break this later):
+
+0 = tile base
+1 = floor
+2 = furniture
+3 = wall
+4 = door
+5 = preview / hover
+6 = selection / highlights
+
+Stick to this and you will never fight z-index again.
+*/

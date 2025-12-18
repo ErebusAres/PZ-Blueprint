@@ -28,3 +28,18 @@ export const dataStore = {
     return Promise.resolve({ isOk: true });
   }
 };
+
+export async function deleteAt(row, col) {
+  const matches = store.filter(
+    item => item.row === row && item.col === col
+  );
+
+  for (const item of matches) {
+    await dataStore.delete(item);
+  }
+}
+
+export function getAll() {
+  return [...store];
+}
+
