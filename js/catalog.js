@@ -1,17 +1,19 @@
-﻿export const MATERIALS = {
+export const MATERIALS = {
   sand: { name: "Sand", color: "#D8C58A" },
   hay: { name: "Hay", color: "#CDB86A" },
   dirt: { name: "Dirt", color: "#8A6E3E" },
-  grass: { name: "Manicured Grass", color: "#6F7E3B" },
-  dryGrass: { name: "Dry Grass", color: "#A58A4A" },
-  lushGrass: { name: "Lush Grass", color: "#4F7A2C" },
+  grass: { name: "Grass: Manicured", color: "#6F7E3B" },
+  dryGrass: { name: "Grass: Dry", color: "#A58A4A" },
+  lushGrass: { name: "Grass: Lush", color: "#4F7A2C" },
+  tallGrass: { name: "Grass: Tall", color: "#4F7A2C" },
   concrete: { name: "Concrete", color: "#C9C6BC" },
-  wood: { name: "Wood", color: "#A37C4A" },
+  wood: { name: "Wood: Basic", color: "#A37C4A" },
+  woodPlank: { name: "Wood: Plank", color: "#9C7B4E" },
   medical: { name: "Medical", color: "#F2F4F3" },
   bathroom: { name: "Bathroom", color: "#D9E1E4" },
   kitchen: { name: "Kitchen", color: "#E4DAC6" },
   water: { name: "Water", color: "#4A90E2" },
-  concreteBlock: { name: "Concrete Block", color: "#BCB9B3" },
+  concreteBlock: { name: "Sidewalk", color: "#BCB9B3" },
   parkingLot: { name: "Parking Lot", color: "#84807A" },
   asphalt: { name: "Asphalt", color: "#656565" },
   brick: { name: "Brick", color: "#73574B" }
@@ -28,6 +30,7 @@ export const WALL_TYPES = {
 export const DOOR_TYPES = {
   standard: { name: "Standard Door", color: "#8B6A45" },
   logGate: { name: "Log Gate", color: "#463827" },
+  fenceGate: { name: "Fence Gate", color: "#553B24" },
   stallDoor: { name: "Stall Door", color: "#6E6F88" }
 };
 
@@ -39,10 +42,18 @@ export const FURNITURE = {
   desk: { name: "Desk", size: [2, 1], color: "#8B4513", wallMount: false },
   computer: { name: "CRT Computer", size: [1, 1], color: "#C0C0C0", wallMount: false, within: true },
   fileCabinet: { name: "File Cabinet", size: [1, 1], color: "#708090", wallMount: false, within: true },
-  sink: { name: "Sink", size: [1, 1], color: "#B0C4DE", wallMount: true, within: true },
-  steelCounter: { name: "Steel Counter", size: [1, 1], color: "#A9A9A9", wallMount: true, within: true },
-  woodCounter: { name: "Wood Counter", size: [1, 1], color: "#8B7355", wallMount: true, within: true },
-  medicalCounter: { name: "Medical Counter", size: [1, 1], color: "#E8E8E8", wallMount: true, within: true },
+  sink: {
+    name: "Sink",
+    size: [1, 1],
+    color: "#B0C4DE",
+    wallMount: true,
+    within: true,
+    stackSlot: "surface",
+    stackLayer: 2
+  },
+  steelCounter: { name: "Steel Counter", size: [1, 1], color: "#A9A9A9", wallMount: "wall-only", within: true },
+  woodCounter: { name: "Wood Counter", size: [1, 1], color: "#8B7355", wallMount: "wall-only", within: true },
+  medicalCounter: { name: "Medical Counter", size: [1, 1], color: "#E8E8E8", wallMount: "wall-only", within: true },
   miniFridge: { name: "Mini Fridge", size: [1, 1], color: "#4682B4", wallMount: true, within: true },
   largeFridge: { name: "Large Fridge", size: [1, 1], color: "#708090", wallMount: true, within: true },
   stove: { name: "Stove", size: [1, 1], color: "#2F4F4F", wallMount: true, within: true },
@@ -59,10 +70,19 @@ export const FURNITURE = {
   trashcan: { name: "Trash Can", size: [1, 1], color: "#4A4A4A", wallMount: false, within: true },
   waterBarrel: { name: "Water Barrel", size: [1, 1], color: "#8B6F47", wallMount: false, within: true },
   schoolLockers: { name: "School Lockers", size: [1, 1], color: "#2F487B", wallMount: "wall-only" },
-  waterTank: { name: "Water Tank", size: [1, 1], color: "#4682B4", wallMount: false, within: true },
-  bathroomSink: { name: "Bathroom Sink", size: [1, 1], color: "#FFFFFF", wallMount: false, within: true },
-  bathroomCounter: { name: "Bathroom Counter", size: [1, 1], color: "#D4D4D4", wallMount: false, within: true },
-  toilet: { name: "Toilet", size: [1, 1], color: "#FFFFFF", wallMount: false, within: true },
-  stallWall: { name: "Stall Wall", size: [1, 1], color: "#5E6183", wallMount: false },
+  waterTank: { name: "Water Cooler", size: [1, 1], color: "#4682B4", wallMount: false, within: true },
+  bathroomSink: {
+    name: "Bathroom Sink",
+    size: [1, 1],
+    color: "#FFFFFF",
+    wallMount: false,
+    within: true,
+    stackSlot: "surface",
+    stackLayer: 2
+  },
+  bathroomCounter: { name: "Bathroom Counter", size: [1, 1], color: "#D4D4D4", wallMount: "wall-only", within: true },
+  toilet: { name: "Toilet", size: [1, 1], color: "#FFFFFF", wallMount: false, within: true },
   shower: { name: "Shower", size: [1, 1], color: "#C0C0C0", wallMount: false, within: true }
 };
+
+

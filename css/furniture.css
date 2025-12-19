@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --tile: 40px;
 }
 
@@ -6,14 +6,33 @@
   position: absolute;
   width: var(--tile);
   height: var(--tile);
-  border-radius: 8px;
-  border: 2px solid rgba(0, 0, 0, 0.45);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+  --furniture-scale-x: 1;
+  --furniture-scale-y: 1;
+  --furniture-stack-scale: 1;
+  --furniture-shift-x: 0px;
+  --furniture-shift-y: 0px;
+  --furniture-stack-shift-y: 0px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.2));
+  background-blend-mode: soft-light;
   pointer-events: none;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-origin: center;
+  transform: translate(
+      var(--furniture-shift-x),
+      calc(var(--furniture-shift-y) + var(--furniture-stack-shift-y))
+    )
+    scale(
+      calc(var(--furniture-scale-x) * var(--furniture-stack-scale)),
+      calc(var(--furniture-scale-y) * var(--furniture-stack-scale))
+    );
 }
 
 .furniture-within {
@@ -23,6 +42,23 @@
 .furniture-selected {
   outline: 2px solid rgba(240, 179, 95, 0.9);
   outline-offset: -4px;
+}
+
+.furniture-stacked {
+  --furniture-stack-scale: 0.92;
+  --furniture-stack-shift-y: -3px;
+  box-shadow:
+    0 12px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.furniture::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
 }
 
 .furniture svg {

@@ -28,6 +28,7 @@ import {
 import { MATERIALS, WALL_TYPES, DOOR_TYPES, FURNITURE } from "./catalog.js";
 import { dataStore } from "./datastore.js";
 import { renderBlueprint } from "./render.js";
+import { buildWallSet, findWallAttachment, rotationToDir } from "./wall-utils.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeGrid();
@@ -514,14 +515,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const item = dataStore.findOne(data => data.id === selectedFurnitureId);
       if (item && item.type === "furniture") {
         const nextRotation = (item.rotation + 90) % 360;
-        dataStore.upsertByKey({
+        const config = FURNITURE[item.kind];
+        const payload = {
           ...item,
           rotation: nextRotation
-        });
+        };
+
+        if (config?.wallMount === "wall-only") {
+          const wallSet = buildWallSet(dataStore.getAll());
+          const preferred = rotationToDir(nextRotation);
+          const attached =
+            findWallAttachment(item.row, item.col, wallSet, preferred) ??
+            findWallAttachment(item.row, item.col, wallSet, item.mountDir);
+          if (attached) {
+            payload.mountDir = attached;
+          } else {
+            delete payload.mountDir;
+          }
+        } else {
+          delete payload.mountDir;
+        }
+
+        dataStore.upsertByKey(payload);
         return;
       }
     }
-
     const next = (currentRotation + 90) % 360;
     setRotation(next);
     updateRotationButton();
@@ -546,3 +564,6 @@ document.addEventListener("DOMContentLoaded", () => {
   updateBlendQuarterUI(blendQuarter);
   setZoom(zoomLevel);
 });
+
+
+

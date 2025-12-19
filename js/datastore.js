@@ -13,7 +13,10 @@ function keyOf(item) {
   if (item.type === "wall") return `wall:${item.row}:${item.col}:${item.dir}`;
   if (item.type === "door") return `door:${item.row}:${item.col}:${item.dir}`;
   if (item.type === "floor") return `floor:${item.row}:${item.col}`;
-  if (item.type === "furniture") return `furniture:${item.row}:${item.col}`;
+  if (item.type === "furniture") {
+    const slot = item.slot ?? "base";
+    return `furniture:${item.row}:${item.col}:${slot}`;
+  }
   return `${item.type}:${item.row}:${item.col}:${item.id ?? ""}`;
 }
 
@@ -76,6 +79,6 @@ export function makeDoorKey(row, col, dir) {
   return `door:${row}:${col}:${dir}`;
 }
 
-export function makeFurnitureKey(row, col) {
-  return `furniture:${row}:${col}`;
+export function makeFurnitureKey(row, col, slot = "base") {
+  return `furniture:${row}:${col}:${slot}`;
 }

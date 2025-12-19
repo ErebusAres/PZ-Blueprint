@@ -1,7 +1,7 @@
 ﻿export const ROWS = 50;
 export const COLS = 50;
 
-export let currentMode = "floor";
+export let currentMode = "cursor";
 export let currentMaterial = "sand";
 export let currentFurniture = "bed";
 export let currentWallType = "standard";

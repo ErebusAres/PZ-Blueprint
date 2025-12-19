@@ -164,9 +164,9 @@ a {
 .workspace {
   flex: 1;
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 18px;
-  padding: 18px 28px 28px;
+  padding: 18px 28px 28px 18px;
   min-height: 0;
 }
 
@@ -174,13 +174,21 @@ a {
   background: rgba(20, 26, 34, 0.9);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
-  padding: 14px 10px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-height: 0;
+  gap: 8px;
   box-shadow: var(--shadow);
   animation: rise 0.6s ease-out both;
+}
+
+.mode-toolbar {
+  flex: 0 0 auto;
+}
+
+.mode-row {
+  display: flex;
+  gap: 6px;
 }
 
 .tool-button {
@@ -188,13 +196,15 @@ a {
   border: 1px solid transparent;
   border-radius: 14px;
   color: var(--text);
-  padding: 12px 10px;
-  text-align: left;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  text-align: center;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  place-items: center;
   font-family: inherit;
+  position: relative;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -213,22 +223,71 @@ a {
   border-color: rgba(224, 113, 113, 0.4);
 }
 
-.tool-label {
-  font-size: 13px;
-  font-weight: 600;
+.tool-icon {
+  display: grid;
+  place-items: center;
 }
 
-.tool-hint {
+.tool-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.tool-button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  background: rgba(12, 16, 22, 0.95);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 10px;
   font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.tool-button::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  transform: translateX(-50%) rotate(-45deg);
+  width: 8px;
+  height: 8px;
+  background: rgba(12, 16, 22, 0.95);
+  border-left: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 9;
+}
+
+.tool-button:hover::after,
+.tool-button:hover::before {
+  opacity: 1;
+}
+
+.tool-button:hover::after {
+  transform: translateX(-50%) translateY(2px);
+}
+
+.tool-button:hover::before {
+  transform: translateX(-50%) translateY(2px) rotate(-45deg);
 }
 
 .toolbar-footer {
-  margin-top: auto;
-  display: grid;
+  display: flex;
   gap: 8px;
+  justify-content: center;
 }
 
 .toolbar-chip {
@@ -273,6 +332,7 @@ a {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .chip {
@@ -590,7 +650,7 @@ a {
 
 @media (max-width: 1100px) {
   .workspace {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .inspector {
@@ -616,20 +676,18 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .toolbar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  .mode-toolbar {
+    width: 100%;
   }
 
-  .tool-button {
-    flex: 1 1 140px;
+  .mode-row {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 
   .toolbar-footer {
-    width: 100%;
-    display: flex;
-    gap: 10px;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .canvas-header {
