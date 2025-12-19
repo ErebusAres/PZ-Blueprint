@@ -10,10 +10,21 @@ const TILE = 40;
 const WALL_THICKNESS = 4;
 const DOOR_THICKNESS = 4;
 const DOOR_SPAN = 0.6;
+const LONG_PRESS_MS = 450;
+const DRAG_THRESHOLD = 6;
 
 let activePointerId = null;
 let previewEl = null;
 let listenersAttached = false;
+let longPressTimer = null;
+let longPressTriggered = false;
+let downTile = null;
+let downRow = null;
+let downCol = null;
+let downClientX = 0;
+let downClientY = 0;
+let hasDragged = false;
+let lastEdge = null;
 
 export function initializeGrid() {
   const container = document.getElementById("grid");
@@ -39,6 +50,8 @@ export function initializeGrid() {
     container.addEventListener("pointermove", onPointerMove);
     container.addEventListener("pointerup", onPointerEnd);
     container.addEventListener("pointercancel", onPointerEnd);
+    document.addEventListener("pointerup", onPointerEnd);
+    document.addEventListener("pointercancel", onPointerEnd);
     document.addEventListener("mode-changed", clearEdgePreview);
     listenersAttached = true;
   }
@@ -46,7 +59,6 @@ export function initializeGrid() {
   function onPointerDown(e) {
     clearEdgePreview();
 
-    if (currentMode === "cursor") return;
     if (e.button !== 0) return;
     if (activePointerId !== null) return;
 
@@ -54,54 +66,111 @@ export function initializeGrid() {
     if (!tile) return;
 
     activePointerId = e.pointerId;
-    container.setPointerCapture(activePointerId);
+    downTile = tile;
+    downRow = Number(tile.dataset.row);
+    downCol = Number(tile.dataset.col);
+    downClientX = e.clientX;
+    downClientY = e.clientY;
+    hasDragged = false;
+    longPressTriggered = false;
+    lastEdge = null;
 
-    applyToolDown(tile, e);
+    if (currentMode !== "cursor") {
+      container.setPointerCapture(activePointerId);
+    }
+
+    clearLongPressTimer();
+    longPressTimer = setTimeout(() => {
+      longPressTimer = null;
+      longPressTriggered = true;
+      clearEdgePreview();
+      const edge = getEdgeFromPoint(tile, downClientX, downClientY);
+      if (currentMode === "rooms") {
+        endRoomDraw(null, null);
+      }
+      document.dispatchEvent(
+        new CustomEvent("tile-long-press", {
+          detail: { row: downRow, col: downCol, edge }
+        })
+      );
+    }, LONG_PRESS_MS);
   }
 
   function onPointerMove(e) {
-    if (!isEdgeMode() && e.pointerId !== activePointerId) return;
+    const isActivePointer = e.pointerId === activePointerId;
+    if (!isEdgeMode() && !isActivePointer) return;
+
+    if (!longPressTriggered && isActivePointer) {
+      const dx = e.clientX - downClientX;
+      const dy = e.clientY - downClientY;
+      if (!hasDragged && dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD) {
+        hasDragged = true;
+        clearLongPressTimer();
+        if (currentMode === "floor" || currentMode === "erase") {
+          applyToolDown(downTile, null);
+        } else if (currentMode === "rooms") {
+          startRoomDraw(downRow, downCol);
+        }
+      }
+    }
 
     const tile = getTileFromEvent(e);
     if (!tile) {
-      clearEdgePreview();
-      return;
-    }
-
-    if (isEdgeMode()) {
-      const edge = getEdgeFromEvent(tile, e);
-      if (edge) {
-        showEdgePreview(tile, edge, currentMode);
-      } else {
+      if (isEdgeMode()) {
         clearEdgePreview();
       }
       return;
     }
 
-    applyToolMove(tile);
+    if (isEdgeMode()) {
+      const edge = getEdgeFromEvent(tile, e);
+      lastEdge = edge;
+      if (edge) {
+        showEdgePreview(tile, edge, currentMode);
+      } else {
+        clearEdgePreview();
+      }
+      if (!isActivePointer) return;
+    }
+
+    if (hasDragged && !longPressTriggered) {
+      applyToolMove(tile);
+    }
   }
 
   function onPointerEnd(e) {
-    clearEdgePreview();
-
     if (e.pointerId !== activePointerId) return;
 
-    activePointerId = null;
+    clearEdgePreview();
+    clearLongPressTimer();
+
+    const tile = getTileFromEvent(e) ?? downTile;
+    const row = tile ? Number(tile.dataset.row) : null;
+    const col = tile ? Number(tile.dataset.col) : null;
+
+    if (longPressTriggered) {
+      resetPointerState();
+      return;
+    }
+
+    if (hasDragged) {
+      if (currentMode === "rooms") {
+        if (typeof row === "number" && typeof col === "number") {
+          endRoomDraw(row, col);
+        } else {
+          endRoomDraw(null, null);
+        }
+      }
+    } else if (tile) {
+      const edge = isEdgeMode() ? getEdgeFromEvent(tile, e) ?? lastEdge : null;
+      applyToolDown(tile, edge);
+    }
 
     if (currentMode === "floor") {
       resetFloorPaintSession();
     }
 
-    if (currentMode === "rooms") {
-      const tile = getTileFromEvent(e);
-      if (tile) {
-        const row = Number(tile.dataset.row);
-        const col = Number(tile.dataset.col);
-        endRoomDraw(row, col);
-      } else {
-        endRoomDraw(null, null);
-      }
-    }
+    resetPointerState();
   }
 
   function getTileFromEvent(e) {
@@ -115,9 +184,13 @@ export function initializeGrid() {
   }
 
   function getEdgeFromEvent(tile, e) {
+    return getEdgeFromPoint(tile, e.clientX, e.clientY);
+  }
+
+  function getEdgeFromPoint(tile, clientX, clientY) {
     const rect = tile.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     const distN = y;
     const distS = rect.height - y;
@@ -140,6 +213,12 @@ export function initializeGrid() {
     if (!previewEl) return;
     previewEl.remove();
     previewEl = null;
+  }
+
+  function clearLongPressTimer() {
+    if (!longPressTimer) return;
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
   }
 
   function showEdgePreview(tile, edge, mode) {
@@ -210,7 +289,7 @@ export function initializeGrid() {
     }
   }
 
-  function applyToolDown(tile, e) {
+  function applyToolDown(tile, edge) {
     const row = Number(tile.dataset.row);
     const col = Number(tile.dataset.col);
 
@@ -219,13 +298,14 @@ export function initializeGrid() {
     } else if (currentMode === "erase") {
       handleErase(row, col);
     } else if (currentMode === "wall") {
-      handleWallClick(row, col, e);
+      handleWallClick(row, col, edge);
     } else if (currentMode === "door") {
-      handleDoorClick(row, col, e);
+      handleDoorClick(row, col, edge);
     } else if (currentMode === "furniture") {
       handleFurnitureClick(row, col);
     } else if (currentMode === "rooms") {
       startRoomDraw(row, col);
+      endRoomDraw(row, col);
     }
   }
 
@@ -240,5 +320,15 @@ export function initializeGrid() {
     } else if (currentMode === "rooms") {
       updateRoomDraw(row, col);
     }
+  }
+
+  function resetPointerState() {
+    activePointerId = null;
+    downTile = null;
+    downRow = null;
+    downCol = null;
+    hasDragged = false;
+    longPressTriggered = false;
+    lastEdge = null;
   }
 }

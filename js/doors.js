@@ -2,6 +2,7 @@
 import { currentDoorType } from "./state.js";
 
 function pickEdgeFromPointerEvent(e) {
+  if (!e) return "n";
   const tile = e.target instanceof Element
     ? e.target.closest(".tile")
     : null;
@@ -25,8 +26,11 @@ function pickEdgeFromPointerEvent(e) {
   return "e";
 }
 
-export async function handleDoorClick(row, col, e) {
-  const dir = pickEdgeFromPointerEvent(e);
+export async function handleDoorClick(row, col, edgeOrEvent) {
+  const dir =
+    typeof edgeOrEvent === "string"
+      ? edgeOrEvent
+      : pickEdgeFromPointerEvent(edgeOrEvent);
   const key = makeDoorKey(row, col, dir);
   const existing = dataStore.findByKey(key);
 

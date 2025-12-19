@@ -1,8 +1,8 @@
 ﻿import { dataStore } from "./datastore.js";
 import {
   currentMaterial,
-  carpetColor,
-  checkerColor,
+  customColorA,
+  customColorB,
   blendMode,
   blendSecondary,
   blendDiagonal,
@@ -18,21 +18,26 @@ export function handleFloorClick(row, col) {
   painted.add(key);
 
   const blend = buildBlendState();
-  const tint = resolveTint(currentMaterial);
+  const tintData = resolveTint(currentMaterial);
 
   dataStore.upsertByKey({
     type: "floor",
     row,
     col,
     material: currentMaterial,
-    ...(tint ? { tint } : {}),
+    ...(tintData?.tint ? { tint: tintData.tint } : {}),
+    ...(tintData?.tintSecondary ? { tintSecondary: tintData.tintSecondary } : {}),
     ...(blend ? { blend } : {})
   });
 }
 
 function resolveTint(material) {
-  if (material === "carpet") return carpetColor;
-  if (material === "checkerTile") return checkerColor;
+  if (material === "carpet") {
+    return { tint: customColorA };
+  }
+  if (material === "checkerTile") {
+    return { tint: customColorA, tintSecondary: customColorB };
+  }
   return null;
 }
 
@@ -40,13 +45,21 @@ function buildBlendState() {
   if (blendMode === "none") return null;
   if (!blendSecondary || blendSecondary === currentMaterial) return null;
   const secondaryTint = resolveTint(blendSecondary);
+  const secondaryTintPayload = secondaryTint
+    ? {
+        secondaryTint: secondaryTint.tint,
+        ...(secondaryTint.tintSecondary
+          ? { secondaryTintSecondary: secondaryTint.tintSecondary }
+          : {})
+      }
+    : null;
 
   if (blendMode === "diag-manual") {
     return {
       mode: "diag",
       secondary: blendSecondary,
       variant: blendDiagonal,
-      ...(secondaryTint ? { secondaryTint } : {})
+      ...(secondaryTintPayload ?? {})
     };
   }
 
@@ -55,7 +68,7 @@ function buildBlendState() {
       mode: "quarter",
       secondary: blendSecondary,
       corner: blendQuarter,
-      ...(secondaryTint ? { secondaryTint } : {})
+      ...(secondaryTintPayload ?? {})
     };
   }
 
@@ -63,7 +76,7 @@ function buildBlendState() {
     return {
       mode: "diag-auto",
       secondary: blendSecondary,
-      ...(secondaryTint ? { secondaryTint } : {})
+      ...(secondaryTintPayload ?? {})
     };
   }
 

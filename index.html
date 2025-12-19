@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="css/furniture.css" />
 </head>
 
-<body>
+<body class="drawer-mode">
   <div id="app">
     <header class="topbar" id="app-header">
       <div class="brand">
@@ -58,13 +58,14 @@
               <button id="zoom-in" class="chip" type="button">+</button>
             </div>
             <button id="toggle-ui" class="chip" type="button">Toggle UI</button>
+            <button id="toggle-drawer" class="chip" type="button">Panels</button>
             <button id="help-btn" class="chip help-chip" type="button" aria-label="Help">?</button>
             <div class="toolbar mode-toolbar" id="toolbar" aria-label="Mode selection">
               <div class="mode-row">
                 <button id="mode-cursor" class="tool-button is-active" data-mode="cursor" type="button" data-tooltip="Cursor - Pan" aria-label="Cursor">
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                      <path d="M4 3l7 17 2-6 6-2z" fill="currentColor" />
+                      <path d="M5 4l6.5 15 1.8-5.2 5.2-1.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
                     </svg>
                   </span>
                 </button>
@@ -72,31 +73,31 @@
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
                       <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
-                      <path d="M4 10h16M4 14h16M10 4v16M14 4v16" fill="none" stroke="currentColor" stroke-width="1.2" />
+                      <path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.4" />
                     </svg>
                   </span>
                 </button>
                 <button id="mode-wall" class="tool-button" data-mode="wall" type="button" data-tooltip="Wall - Edge" aria-label="Wall">
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                      <path d="M6 6v12h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      <rect x="4" y="6" width="16" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                      <path d="M4 12h16M9 6v6M15 12v6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
                     </svg>
                   </span>
                 </button>
                 <button id="mode-door" class="tool-button" data-mode="door" type="button" data-tooltip="Door - Edge" aria-label="Door">
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                      <rect x="6" y="4" width="10" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
-                      <circle cx="13.5" cy="12" r="1" fill="currentColor" />
+                      <rect x="6" y="4" width="12" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                      <circle cx="14" cy="12" r="1" fill="currentColor" />
                     </svg>
                   </span>
                 </button>
                 <button id="mode-furniture" class="tool-button" data-mode="furniture" type="button" data-tooltip="Furniture - Place" aria-label="Furniture">
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                      <rect x="6" y="4" width="8" height="7" rx="1" fill="currentColor" />
-                      <rect x="6" y="11" width="12" height="4" rx="1" fill="currentColor" />
-                      <path d="M8 15v5M16 15v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <rect x="5" y="10" width="14" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+                      <path d="M7 10V8h10v2M7 16v2M17 16v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                     </svg>
                   </span>
                 </button>
@@ -110,8 +111,8 @@
                 <button class="tool-button tool-erase" id="mode-erase" data-mode="erase" type="button" data-tooltip="Erase - Clear" aria-label="Erase">
                   <span class="tool-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" role="presentation" focusable="false">
-                      <path d="M5 14l7-7 7 7-5 5H8z" fill="currentColor" />
-                      <path d="M13 20h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M5 15l6-6 6 6-4 4H9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                      <path d="M13 19h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
                     </svg>
                   </span>
                 </button>
@@ -393,21 +394,21 @@
           </div>
           <div class="panel-body">
             <div class="color-controls">
-            <div class="color-control" data-color-material="carpet">
-              <div class="color-label">Carpet Tile</div>
-              <div class="color-input-row">
-                <input id="carpet-color" type="color" value="#b0372f" />
-                <span class="color-value" id="carpet-color-value">#b0372f</span>
+              <div class="color-control">
+                <div class="color-label">Color A</div>
+                <div class="color-input-row">
+                  <input id="custom-color-a" type="color" value="#b0372f" />
+                  <span class="color-value" id="custom-color-a-value">#b0372f</span>
+                </div>
               </div>
-            </div>
-            <div class="color-control" data-color-material="checkerTile">
-              <div class="color-label">Checker Tile</div>
-              <div class="color-input-row">
-                <input id="checker-color" type="color" value="#3b6ed8" />
-                <span class="color-value" id="checker-color-value">#3b6ed8</span>
+              <div class="color-control">
+                <div class="color-label">Color B</div>
+                <div class="color-input-row">
+                  <input id="custom-color-b" type="color" value="#f2f2ee" />
+                  <span class="color-value" id="custom-color-b-value">#f2f2ee</span>
+                </div>
+                <div class="color-note">Used by checker tiles.</div>
               </div>
-              <div class="color-note">Replaces the blue squares.</div>
-            </div>
             </div>
           </div>
         </div>
@@ -646,6 +647,77 @@
         </div>
       </aside>
     </main>
+
+    <div class="tool-drawer" id="tool-drawer" aria-label="Tool drawer">
+      <div class="drawer-bar">
+        <div class="drawer-group">
+          <button id="drawer-undo" class="drawer-btn" data-action="undo" type="button" data-tooltip="Undo" aria-label="Undo">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <path d="M9 7H4v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M4 12c2.5-4 8-6 12-2 2.5 2.5 2.5 6.5 0 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button id="drawer-redo" class="drawer-btn" data-action="redo" type="button" data-tooltip="Redo" aria-label="Redo">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M20 12c-2.5-4-8-6-12-2-2.5 2.5-2.5 6.5 0 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="drawer-group drawer-tools">
+          <button class="drawer-btn is-active" data-mode="cursor" data-drawer-tool="cursor" type="button" data-tooltip="Cursor" aria-label="Cursor">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <path d="M5 4l6.5 15 1.8-5.2 5.2-1.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button class="drawer-btn" data-mode="floor" data-drawer-tool="floor" type="button" data-tooltip="Floor" aria-label="Floor">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="1.4" />
+            </svg>
+          </button>
+          <button class="drawer-btn" data-mode="wall" data-drawer-tool="wall" type="button" data-tooltip="Wall" aria-label="Wall">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <rect x="4" y="6" width="16" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path d="M4 12h16M9 6v6M15 12v6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="drawer-btn" data-mode="door" data-drawer-tool="door" type="button" data-tooltip="Door" aria-label="Door">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <rect x="6" y="4" width="12" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <circle cx="14" cy="12" r="1" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="drawer-btn" data-mode="furniture" data-drawer-tool="furniture" type="button" data-tooltip="Furniture" aria-label="Furniture">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <rect x="5" y="10" width="14" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <path d="M7 10V8h10v2M7 16v2M17 16v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="drawer-btn" data-mode="rooms" data-drawer-tool="rooms" type="button" data-tooltip="Room" aria-label="Room">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2" />
+            </svg>
+          </button>
+          <button class="drawer-btn drawer-erase" data-mode="erase" data-drawer-tool="erase" type="button" data-tooltip="Erase" aria-label="Erase">
+            <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+              <path d="M5 15l6-6 6 6-4 4H9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              <path d="M13 19h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+        <div class="drawer-group drawer-categories is-hidden" id="drawer-categories" aria-label="Drawer categories"></div>
+        <div class="drawer-selection" id="drawer-selection">
+          <span class="drawer-selection-icon" aria-hidden="true"></span>
+          <span class="drawer-selection-text">Cursor</span>
+        </div>
+      </div>
+      <div class="drawer-popover is-hidden" id="drawer-popover"></div>
+      <div class="drawer-search is-hidden" id="drawer-search">
+        <input id="drawer-search-input" type="search" placeholder="Search tiles, walls, furniture" aria-label="Search drawer" />
+        <div class="drawer-search-results" id="drawer-search-results" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
 
   <div class="help-backdrop is-hidden" id="help-backdrop"></div>

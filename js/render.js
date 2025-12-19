@@ -209,7 +209,7 @@ function addFloor(layer, item, floorMap, wallSet, doorSet) {
   el.style.top = `${item.row * TILE}px`;
   el.style.width = `${TILE}px`;
   el.style.height = `${TILE}px`;
-  applyFloorTexture(el, floorMaterial, item.row, item.col, item.tint);
+  applyFloorTexture(el, floorMaterial, item.row, item.col, item.tint, item.tintSecondary);
 
   if (item.blend) {
     applyFloorBlend(el, item, floorMap, wallSet, doorSet);
@@ -231,7 +231,8 @@ function applyFloorBlend(el, item, floorMap, wallSet, doorSet) {
       item.row,
       item.col,
       corner,
-      blend.secondaryTint
+      blend.secondaryTint,
+      blend.secondaryTintSecondary
     );
     return;
   }
@@ -243,7 +244,8 @@ function applyFloorBlend(el, item, floorMap, wallSet, doorSet) {
       item.row,
       item.col,
       blend.corner,
-      blend.secondaryTint
+      blend.secondaryTint,
+      blend.secondaryTintSecondary
     );
     return;
   }
@@ -264,36 +266,37 @@ function applyFloorBlend(el, item, floorMap, wallSet, doorSet) {
         item.row,
         item.col,
         corner,
-        blend.secondaryTint
+        blend.secondaryTint,
+        blend.secondaryTintSecondary
       );
     }
   }
 }
 
-function addTriangleOverlay(el, material, row, col, corner, tint) {
+function addTriangleOverlay(el, material, row, col, corner, tint, tintSecondary) {
   const clipPath = triangleClipPath(corner);
   if (!clipPath) return;
-  addBlendOverlay(el, material, row, col, clipPath, tint);
+  addBlendOverlay(el, material, row, col, clipPath, tint, tintSecondary);
 }
 
-function addQuarterOverlay(el, material, row, col, corner, tint) {
+function addQuarterOverlay(el, material, row, col, corner, tint, tintSecondary) {
   const clipPath = quarterClipPath(corner);
   if (!clipPath) return;
-  addBlendOverlay(el, material, row, col, clipPath, tint);
+  addBlendOverlay(el, material, row, col, clipPath, tint, tintSecondary);
 }
 
-function addBlendOverlay(el, material, row, col, clipPath, tint) {
+function addBlendOverlay(el, material, row, col, clipPath, tint, tintSecondary) {
   const overlay = document.createElement("div");
   overlay.style.position = "absolute";
   overlay.style.inset = "0";
   overlay.style.pointerEvents = "none";
-  applyFloorTexture(overlay, material, row, col, tint);
+  applyFloorTexture(overlay, material, row, col, tint, tintSecondary);
   overlay.style.clipPath = clipPath;
   el.appendChild(overlay);
 }
 
-function applyFloorTexture(el, material, row, col, tint) {
-  const pattern = getFloorTexture(material, tint);
+function applyFloorTexture(el, material, row, col, tint, tintSecondary) {
+  const pattern = getFloorTexture(material, tint, tintSecondary);
   el.style.backgroundImage = `url(${pattern.texture})`;
   el.style.backgroundSize = `${pattern.size}px ${pattern.size}px`;
   el.style.backgroundPosition = `${-col * TILE}px ${-row * TILE}px`;
@@ -730,18 +733,22 @@ function updateMinimap(data) {
   ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
 }
 
-function getFloorTexture(material, tint) {
+function getFloorTexture(material, tint, tintSecondary) {
   const size = PATTERN_SIZES[material] ?? 200;
-  const cacheKey = tint ? `${material}:${tint}` : material;
+  const cacheKey = tintSecondary
+    ? `${material}:${tint ?? "base"}:${tintSecondary}`
+    : tint
+      ? `${material}:${tint}`
+      : material;
   const cached = textureCache.get(cacheKey);
   if (cached && cached.size === size) return cached;
-  const texture = createFloorTexture(material, size, tint);
+  const texture = createFloorTexture(material, size, tint, tintSecondary);
   const payload = { texture, size };
   textureCache.set(cacheKey, payload);
   return payload;
 }
 
-function createFloorTexture(material, size, tint) {
+function createFloorTexture(material, size, tint, tintSecondary) {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -884,7 +891,7 @@ function createFloorTexture(material, size, tint) {
     }
   } else if (material === "checkerTile") {
     const primary = baseColor;
-    const white = "#f2f2ee";
+    const white = tintSecondary ?? "#f2f2ee";
     const half = size / 2;
     ctx.fillStyle = white;
     ctx.fillRect(0, 0, size, size);

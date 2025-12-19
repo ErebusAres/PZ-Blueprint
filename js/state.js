@@ -3,8 +3,8 @@ export let gridCols = 50;
 
 export let currentMode = "cursor";
 export let currentMaterial = "sand";
-export let carpetColor = "#B0372F";
-export let checkerColor = "#3B6ED8";
+export let customColorA = "#B0372F";
+export let customColorB = "#F2F2EE";
 export let currentFurniture = "bed";
 export let currentWallType = "standard";
 export let currentDoorType = "standard";
@@ -32,12 +32,12 @@ export function setMaterial(material) {
   currentMaterial = material;
 }
 
-export function setCarpetColor(color) {
-  carpetColor = color;
+export function setCustomColorA(color) {
+  customColorA = color;
 }
 
-export function setCheckerColor(color) {
-  checkerColor = color;
+export function setCustomColorB(color) {
+  customColorB = color;
 }
 
 export function setFurniture(kind) {
