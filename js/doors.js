@@ -1,5 +1,5 @@
-﻿import { dataStore, makeWallKey } from "./datastore.js";
-import { currentWallType } from "./state.js";
+﻿import { dataStore, makeDoorKey } from "./datastore.js";
+import { currentDoorType } from "./state.js";
 
 function pickEdgeFromPointerEvent(e) {
   const tile = e.target instanceof Element
@@ -25,20 +25,20 @@ function pickEdgeFromPointerEvent(e) {
   return "e";
 }
 
-export async function handleWallClick(row, col, e) {
+export async function handleDoorClick(row, col, e) {
   const dir = pickEdgeFromPointerEvent(e);
-  const key = makeWallKey(row, col, dir);
+  const key = makeDoorKey(row, col, dir);
   const existing = dataStore.findByKey(key);
 
   if (existing) {
-    if (existing.wallType !== currentWallType) {
+    if (existing.doorType !== currentDoorType) {
       await dataStore.upsertByKey({
         ...existing,
-        type: "wall",
+        type: "door",
         row,
         col,
         dir,
-        wallType: currentWallType
+        doorType: currentDoorType
       });
       return;
     }
@@ -48,10 +48,10 @@ export async function handleWallClick(row, col, e) {
   }
 
   await dataStore.create({
-    type: "wall",
+    type: "door",
     row,
     col,
     dir,
-    wallType: currentWallType
+    doorType: currentDoorType
   });
 }

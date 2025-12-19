@@ -1,5 +1,14 @@
-import { deleteAt } from "./datastore.js";
+import { dataStore } from "./datastore.js";
 
-export async function handleErase(row, col) {
-  await deleteAt(row, col);
+export function handleErase(row, col) {
+  const all = dataStore.getAll();
+
+  const targets = all.filter(item =>
+    item.row === row &&
+    item.col === col
+  );
+
+  for (const item of targets) {
+    dataStore.delete(item);
+  }
 }
