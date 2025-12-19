@@ -1,5 +1,5 @@
-export let gridRows = 50;
-export let gridCols = 50;
+export let gridRows = 20;
+export let gridCols = 20;
 
 export let currentMode = "cursor";
 export let currentMaterial = "sand";
@@ -18,6 +18,8 @@ export let blendMode = "none";
 export let blendSecondary = "sand";
 export let blendDiagonal = "slash";
 export let blendQuarter = "tl";
+export let blueprintTitle = "My Blueprint";
+export let blueprintVersion = 1;
 
 // setters (important for shared state)
 export function setBlueprintData(data) {
@@ -84,4 +86,12 @@ export function setBlendQuarter(corner) {
 export function setGridSize(rows, cols) {
   gridRows = rows;
   gridCols = cols;
+}
+
+export function setBlueprintTitle(title) {
+  blueprintTitle = title;
+}
+
+export function setBlueprintVersion(version) {
+  blueprintVersion = version;
 }

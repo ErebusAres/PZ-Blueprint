@@ -15,6 +15,8 @@ import {
   setBlendQuarter,
   setSelectedFurnitureId,
   setGridSize,
+  setBlueprintTitle,
+  setBlueprintVersion,
   currentMode,
   currentMaterial,
   customColorA,
@@ -30,11 +32,13 @@ import {
   blendMode,
   blendSecondary,
   blendDiagonal,
-  blendQuarter
+  blendQuarter,
+  blueprintTitle,
+  blueprintVersion
 } from "./state.js";
 import { MATERIALS, WALL_TYPES, DOOR_TYPES, FURNITURE } from "./catalog.js";
 import { dataStore } from "./datastore.js";
-import { renderBlueprint } from "./render.js";
+import { renderBlueprint, renderBlueprintToCanvas } from "./render.js";
 import { buildWallSet, findWallAttachment, rotationToDir } from "./wall-utils.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -64,6 +68,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const modeIndicator = document.getElementById("mode-indicator");
   const selectedName = document.getElementById("selected-name");
+  const projectTitle = document.getElementById("project-title");
+  const projectVersion = document.getElementById("project-version");
+  const projectVersionInc = document.getElementById("project-version-inc");
   const wallSection = document.getElementById("wall-section");
   const doorSection = document.getElementById("door-section");
   const materialSection = document.getElementById("material-section");
@@ -117,6 +124,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const toastStack = document.getElementById("toast-stack");
   const importButton = document.getElementById("import-btn");
   const shareButton = document.getElementById("share-btn");
+  const exportButton = document.getElementById("export-btn");
+  const exportPopover = document.getElementById("export-popover");
+  const optionsButton = document.getElementById("options-btn");
+  const optionsPopover = document.getElementById("options-popover");
+  const resetButton = document.getElementById("reset-btn");
   const toggleDrawer = document.getElementById("toggle-drawer");
   const drawer = document.getElementById("tool-drawer");
   const drawerPopover = document.getElementById("drawer-popover");
@@ -147,6 +159,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!value) return "#000000";
     return value.toLowerCase();
   }
+
+  const PROJECT_TITLE_KEY = "pz-blueprint:title";
+  const PROJECT_VERSION_KEY = "pz-blueprint:version";
+  const AUTOSAVE_KEY = "pz-blueprint:autosave";
+  const DEFAULT_GRID_ROWS = 20;
+  const DEFAULT_GRID_COLS = 20;
+  const DEFAULT_TITLE = "My Blueprint";
+  const DEFAULT_VERSION = 1;
 
   const DEFAULT_CARPET_COLOR = "#b0372f";
   const DEFAULT_CHECKER_A = "#3b6ed8";
@@ -213,6 +233,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       materials: [
         "sand",
         "dirt",
+        "mud",
+        "gravel",
+        "leafLitter",
         "grass",
         "lushGrass",
         "dryGrass",
@@ -223,11 +246,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     },
     flooring: {
       label: "Flooring",
-      materials: ["wood", "woodPlank", "brick", "bathroom", "kitchen", "medical"]
+      materials: [
+        "wood",
+        "woodPlank",
+        "woodParquet",
+        "brick",
+        "bathroom",
+        "kitchen",
+        "medical",
+        "tileTerracotta",
+        "tileSlate"
+      ]
     },
     industrial: {
       label: "Industrial",
-      materials: ["concrete", "concreteBlock", "asphalt", "parkingLot"]
+      materials: [
+        "concrete",
+        "concreteCracked",
+        "concreteBlock",
+        "cobblestone",
+        "asphalt",
+        "parkingLot"
+      ]
     },
     custom: {
       label: "Custom",
@@ -238,27 +278,50 @@ document.addEventListener("DOMContentLoaded", async () => {
   const WALL_CATEGORIES = {
     walls: {
       label: "Walls",
-      items: ["standard", "logWall", "stallWall"]
+      items: [
+        "standard",
+        "plasterWall",
+        "brickWall",
+        "concreteWall",
+        "metalWall",
+        "logWall",
+        "stallWall"
+      ]
     },
     fences: {
       label: "Fences",
-      items: ["picketFence", "woodenFence"]
+      items: ["picketFence", "chainLinkFence", "woodenFence"]
     }
   };
   const DOOR_CATEGORIES = {
     doors: {
       label: "Doors",
-      items: ["standard", "stallDoor"]
+      items: ["standard", "metalDoor", "glassDoor", "garageDoor", "stallDoor"]
     },
     gates: {
       label: "Gates",
-      items: ["logGate", "fenceGate"]
+      items: ["logGate", "fenceGate", "chainGate"]
     }
   };
   const FURNITURE_CATEGORIES = {
     home: {
       label: "Home",
-      items: ["bed", "chair", "shelf", "wallShelf", "storageBox", "trashcan"]
+      items: [
+        "bed",
+        "chair",
+        "couch",
+        "armchair",
+        "coffeeTable",
+        "nightstand",
+        "dresser",
+        "wardrobe",
+        "bookcase",
+        "tvStand",
+        "shelf",
+        "wallShelf",
+        "storageBox",
+        "trashcan"
+      ]
     },
     kitchen: {
       label: "Kitchen",
@@ -268,30 +331,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         "woodCounter",
         "miniFridge",
         "largeFridge",
+        "freezer",
         "stove",
         "oldOven",
+        "microwave",
+        "dishwasher",
+        "kitchenTable",
+        "diningTable",
+        "kitchenIsland",
         "waterTank"
       ]
     },
     bath: {
       label: "Bath",
-      items: ["bathroomSink", "bathroomCounter", "toilet", "shower"]
+      items: [
+        "bathroomSink",
+        "bathroomCounter",
+        "toilet",
+        "shower",
+        "bathtub",
+        "towelRack"
+      ]
     },
     office: {
       label: "Office",
-      items: ["desk", "deskChair", "computer", "fileCabinet", "schoolLockers"]
+      items: [
+        "desk",
+        "officeTable",
+        "deskChair",
+        "computer",
+        "fileCabinet",
+        "schoolLockers",
+        "whiteboard"
+      ]
     },
     medical: {
       label: "Medical",
-      items: ["medicalBed", "medicalTray", "ivStand", "medicalCounter"]
+      items: [
+        "medicalBed",
+        "gurney",
+        "medicalTray",
+        "ivStand",
+        "medicalCounter",
+        "medCabinet"
+      ]
     },
     utility: {
       label: "Utility",
-      items: ["washer", "dryer", "waterBarrel"]
+      items: ["washer", "dryer", "waterBarrel", "generator", "metalShelf", "toolCabinet"]
     },
     recreation: {
       label: "Recreation",
-      items: ["poolTable", "jukebox"]
+      items: ["poolTable", "jukebox", "arcadeMachine"]
     }
   };
   const MATERIAL_CATEGORY_LOOKUP = {};
@@ -369,6 +460,228 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateProperties();
   }
 
+  function updateProjectMetaUI() {
+    if (projectTitle) {
+      projectTitle.textContent = blueprintTitle;
+    }
+    if (projectVersion) {
+      projectVersion.textContent = `v${blueprintVersion}`;
+    }
+    document.title = blueprintTitle ? `${blueprintTitle} | PZ Blueprint` : "PZ Blueprint";
+  }
+
+  function persistProjectMeta() {
+    try {
+      localStorage.setItem(PROJECT_TITLE_KEY, blueprintTitle);
+      localStorage.setItem(PROJECT_VERSION_KEY, String(blueprintVersion));
+      saveAutosave();
+    } catch (error) {
+      // Ignore storage failures in private mode.
+    }
+  }
+
+  function loadProjectMeta() {
+    try {
+      const storedTitle = localStorage.getItem(PROJECT_TITLE_KEY);
+      const storedVersion = localStorage.getItem(PROJECT_VERSION_KEY);
+      if (storedTitle) {
+        setBlueprintTitle(storedTitle);
+      }
+      if (storedVersion) {
+        const parsed = Number.parseInt(storedVersion, 10);
+        if (Number.isFinite(parsed) && parsed > 0) {
+          setBlueprintVersion(parsed);
+        }
+      }
+    } catch (error) {
+      // Ignore storage failures in private mode.
+    }
+  }
+
+  function buildAutosavePayload() {
+    return {
+      schema: 2,
+      grid: { rows: gridRows, cols: gridCols },
+      meta: { title: blueprintTitle, version: blueprintVersion },
+      state: {
+        material: currentMaterial,
+        wallType: currentWallType,
+        doorType: currentDoorType,
+        furniture: currentFurniture,
+        rotation: currentRotation,
+        customColorA,
+        customColorB,
+        blendMode,
+        blendSecondary,
+        blendDiagonal,
+        blendQuarter
+      },
+      items: dataStore.getAll()
+    };
+  }
+
+  function saveAutosave() {
+    try {
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(buildAutosavePayload()));
+    } catch (error) {
+      // Ignore storage failures in private mode.
+    }
+  }
+
+  async function loadAutosave() {
+    try {
+      const raw = localStorage.getItem(AUTOSAVE_KEY);
+      if (!raw) return false;
+      const payload = JSON.parse(raw);
+      const items = Array.isArray(payload) ? payload : payload.items;
+      const metaTitle = payload?.meta?.title ?? payload?.title ?? payload?.name;
+      const metaVersion = payload?.meta?.version ?? payload?.blueprintVersion;
+      if (metaTitle) {
+        setBlueprintTitle(metaTitle);
+      }
+      if (Number.isFinite(metaVersion) && metaVersion > 0) {
+        setBlueprintVersion(metaVersion);
+      }
+      if (payload?.state) {
+        if (payload.state.customColorA) {
+          setCustomColorA(payload.state.customColorA);
+        }
+        if (payload.state.customColorB) {
+          setCustomColorB(payload.state.customColorB);
+        }
+        if (payload.state.material) {
+          setMaterial(payload.state.material);
+        }
+        if (payload.state.wallType) {
+          setWallType(payload.state.wallType);
+        }
+        if (payload.state.doorType) {
+          setDoorType(payload.state.doorType);
+        }
+        if (payload.state.furniture) {
+          setFurniture(payload.state.furniture);
+        }
+        if (Number.isFinite(payload.state.rotation)) {
+          setRotation(payload.state.rotation);
+        }
+        if (payload.state.blendMode) {
+          setBlendMode(payload.state.blendMode);
+        }
+        if (payload.state.blendSecondary) {
+          setBlendSecondary(payload.state.blendSecondary);
+        }
+        if (payload.state.blendDiagonal) {
+          setBlendDiagonal(payload.state.blendDiagonal);
+        }
+        if (payload.state.blendQuarter) {
+          setBlendQuarter(payload.state.blendQuarter);
+        }
+      }
+      if (Array.isArray(payload?.grid)) {
+        const rows = clampGridValue(payload.grid[0], gridRows);
+        const cols = clampGridValue(payload.grid[1], gridCols);
+        setGridSize(rows, cols);
+      } else if (payload?.grid?.rows && payload?.grid?.cols) {
+        const rows = clampGridValue(payload.grid.rows, gridRows);
+        const cols = clampGridValue(payload.grid.cols, gridCols);
+        setGridSize(rows, cols);
+      }
+      if (Array.isArray(items)) {
+        await dataStore.replaceAll(items);
+      }
+      updateProjectMetaUI();
+      persistProjectMeta();
+      initializeGrid();
+      updateGridSizeUI();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function editProjectTitle() {
+    const next = window.prompt("Rename blueprint:", blueprintTitle);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    setBlueprintTitle(trimmed);
+    updateProjectMetaUI();
+    persistProjectMeta();
+    showToast("Blueprint renamed");
+  }
+
+  function editProjectVersion() {
+    const next = window.prompt("Set version number:", String(blueprintVersion));
+    if (next === null) return;
+    const parsed = Number.parseInt(next, 10);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      showToast("Version must be 1 or higher");
+      return;
+    }
+    setBlueprintVersion(parsed);
+    updateProjectMetaUI();
+    persistProjectMeta();
+    showToast(`Version set to v${parsed}`);
+  }
+
+  function incrementProjectVersion() {
+    const next = blueprintVersion + 1;
+    setBlueprintVersion(next);
+    updateProjectMetaUI();
+    persistProjectMeta();
+    showToast(`Version set to v${next}`);
+  }
+
+  async function resetBlueprint() {
+    const confirmed = window.confirm(
+      "This will erase your current blueprint and restore defaults. Continue?"
+    );
+    if (!confirmed) return;
+    try {
+      localStorage.removeItem(AUTOSAVE_KEY);
+      localStorage.removeItem(PROJECT_TITLE_KEY);
+      localStorage.removeItem(PROJECT_VERSION_KEY);
+    } catch (error) {
+      // Ignore storage failures in private mode.
+    }
+    setMode("cursor");
+    setMaterial("sand");
+    setWallType("standard");
+    setDoorType("standard");
+    setFurniture("bed");
+    setRotation(0);
+    setBlendMode("none");
+    setBlendSecondary("sand");
+    setBlendDiagonal("slash");
+    setBlendQuarter("tl");
+    setCustomColorA(DEFAULT_CARPET_COLOR);
+    setCustomColorB(DEFAULT_CHECKER_B);
+    setGridSize(DEFAULT_GRID_ROWS, DEFAULT_GRID_COLS);
+    setBlueprintTitle(DEFAULT_TITLE);
+    setBlueprintVersion(DEFAULT_VERSION);
+    await dataStore.replaceAll([]);
+    setSelectedFurnitureId(null);
+    initializeGrid();
+    updateModeUI("cursor");
+    updateMaterialUI("sand");
+    updateWallUI("standard");
+    updateDoorUI("standard");
+    updateFurnitureUI("bed");
+    updateRotationButton();
+    updateBlendModeUI(blendMode);
+    updateBlendSecondaryUI(blendSecondary);
+    updateBlendDiagonalUI(blendDiagonal);
+    updateBlendQuarterUI(blendQuarter);
+    updateGridSizeUI();
+    updateTileColorUI();
+    updateProjectMetaUI();
+    updateUndoRedoUI();
+    updateStatusBar();
+    updateProperties();
+    setZoom(1);
+    showToast("Blueprint reset");
+  }
+
   function clampGridValue(value, fallback) {
     const parsed = Number.parseInt(value, 10);
     if (!Number.isFinite(parsed)) return fallback;
@@ -384,6 +697,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     setTimeout(() => {
       toast.remove();
     }, 2400);
+  }
+
+  function sanitizeFileName(value) {
+    const safe = value.trim().replace(/[^a-z0-9_-]+/gi, "-");
+    return safe.replace(/^-+|-+$/g, "");
+  }
+
+  async function exportBlueprintImage(includeGrid) {
+    const items = dataStore.getAll();
+    let canvas = null;
+    try {
+      canvas = await renderBlueprintToCanvas(items, { includeGrid });
+    } catch (error) {
+      showToast("Export failed");
+      return;
+    }
+    if (!canvas) {
+      showToast("Nothing to export yet");
+      return;
+    }
+    const title = sanitizeFileName(blueprintTitle || "blueprint") || "blueprint";
+    const suffix = includeGrid ? "grid" : "clean";
+    const filename = `${title}-v${blueprintVersion}-${suffix}.png`;
+    canvas.toBlob(blob => {
+      if (!blob) {
+        showToast("Export failed");
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showToast("Export ready");
+    });
   }
 
   function blendLabel() {
@@ -1480,6 +1831,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  if (projectTitle) {
+    projectTitle.addEventListener("click", editProjectTitle);
+    projectTitle.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        editProjectTitle();
+      }
+    });
+  }
+
+  if (projectVersion) {
+    projectVersion.addEventListener("click", editProjectVersion);
+  }
+
+  if (projectVersionInc) {
+    projectVersionInc.addEventListener("click", incrementProjectVersion);
+  }
+
   drawerToolButtons.forEach(button => {
     button.addEventListener("click", () => {
       const mode = button.dataset.mode;
@@ -1604,6 +1973,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (display) display.textContent = value;
       applySwatches();
       updateTileColorUI();
+      saveAutosave();
     });
   }
 
@@ -1670,6 +2040,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       applySwatches();
       updateTileColorUI();
+      saveAutosave();
     });
   }
 
@@ -1682,6 +2053,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       applySwatches();
       updateTileColorUI();
+      saveAutosave();
     });
   }
 
@@ -1721,6 +2093,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         initializeGrid();
         updateGridSizeUI();
         renderBlueprint(dataStore.getAll());
+        saveAutosave();
         showToast("Grid resized");
         closeGridPopover();
       });
@@ -1729,6 +2102,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (gridCancel) {
       gridCancel.addEventListener("click", closeGridPopover);
     }
+  }
+
+  if (optionsButton && optionsPopover) {
+    const closeOptionsPopover = () => {
+      optionsPopover.classList.add("is-hidden");
+      if (gridPopover && !gridPopover.classList.contains("is-hidden")) {
+        gridPopover.classList.add("is-hidden");
+      }
+    };
+    const openOptionsPopover = () => {
+      optionsPopover.classList.remove("is-hidden");
+    };
+
+    optionsButton.addEventListener("click", event => {
+      event.stopPropagation();
+      if (optionsPopover.classList.contains("is-hidden")) {
+        openOptionsPopover();
+      } else {
+        closeOptionsPopover();
+      }
+    });
+
+    optionsPopover.addEventListener("click", event => {
+      event.stopPropagation();
+    });
+
+    document.addEventListener("click", event => {
+      if (!optionsPopover.classList.contains("is-hidden")) {
+        if (!optionsPopover.contains(event.target) && event.target !== optionsButton) {
+          closeOptionsPopover();
+        }
+      }
+    });
+  }
+
+  if (exportButton && exportPopover) {
+    const closeExportPopover = () => {
+      exportPopover.classList.add("is-hidden");
+    };
+    const openExportPopover = () => {
+      exportPopover.classList.remove("is-hidden");
+    };
+
+    exportButton.addEventListener("click", event => {
+      event.stopPropagation();
+      if (exportPopover.classList.contains("is-hidden")) {
+        openExportPopover();
+      } else {
+        closeExportPopover();
+      }
+    });
+
+    exportPopover.addEventListener("click", event => {
+      event.stopPropagation();
+      const button = event.target.closest("[data-export]");
+      if (!button) return;
+      const mode = button.dataset.export;
+      exportBlueprintImage(mode === "grid");
+      closeExportPopover();
+    });
+
+    document.addEventListener("click", () => {
+      if (!exportPopover.classList.contains("is-hidden")) {
+        closeExportPopover();
+      }
+    });
   }
 
   document.addEventListener("click", event => {
@@ -1825,6 +2264,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const payload = JSON.parse(text);
         const items = Array.isArray(payload) ? payload : payload.items;
+        if (payload && !Array.isArray(payload)) {
+          const metaTitle = payload?.meta?.title ?? payload?.title ?? payload?.name;
+          const metaVersion = payload?.meta?.version ?? payload?.blueprintVersion;
+          if (metaTitle) {
+            setBlueprintTitle(metaTitle);
+          }
+          if (Number.isFinite(metaVersion) && metaVersion > 0) {
+            setBlueprintVersion(metaVersion);
+          }
+          updateProjectMetaUI();
+          persistProjectMeta();
+        }
         if (Array.isArray(payload?.grid)) {
           const rows = clampGridValue(payload.grid[0], gridRows);
           const cols = clampGridValue(payload.grid[1], gridCols);
@@ -1856,8 +2307,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (shareButton) {
     shareButton.addEventListener("click", async () => {
       const payload = {
-        version: 1,
+        schema: 2,
         grid: { rows: gridRows, cols: gridCols },
+        meta: { title: blueprintTitle, version: blueprintVersion },
         items: dataStore.getAll()
       };
       const hash = await encodeShareHash(payload);
@@ -1976,6 +2428,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       updateDrawerToggle();
       closeDrawerPopover();
       closeDrawerSearch();
+    });
+  }
+
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      resetBlueprint();
     });
   }
 
@@ -2202,15 +2660,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.addEventListener("blueprint-changed", () => {
     updateUndoRedoUI();
+    saveAutosave();
   });
 
   async function tryLoadShareLink() {
-    if (!window.location.hash) return;
+    if (!window.location.hash) return false;
     try {
       const payload = await decodeShareHash(window.location.hash);
       if (!payload) {
         showToast("Shared link not supported in this browser");
-        return;
+        return false;
+      }
+      if (payload && !Array.isArray(payload)) {
+        const metaTitle = payload?.meta?.title ?? payload?.title ?? payload?.name;
+        const metaVersion = payload?.meta?.version ?? payload?.blueprintVersion;
+        if (metaTitle) {
+          setBlueprintTitle(metaTitle);
+        }
+        if (Number.isFinite(metaVersion) && metaVersion > 0) {
+          setBlueprintVersion(metaVersion);
+        }
+        updateProjectMetaUI();
+        persistProjectMeta();
       }
       const items = Array.isArray(payload) ? payload : payload.items;
       if (Array.isArray(payload?.grid)) {
@@ -2229,12 +2700,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateGridSizeUI();
         showToast("Shared blueprint loaded");
       }
+      return true;
     } catch (error) {
       showToast("Shared link invalid");
+      return false;
     }
   }
 
-  await tryLoadShareLink();
+  loadProjectMeta();
+  updateProjectMetaUI();
+
+  const loadedFromShare = await tryLoadShareLink();
+  if (!loadedFromShare) {
+    await loadAutosave();
+  }
 
   applySwatches();
   updateModeUI(currentMode);

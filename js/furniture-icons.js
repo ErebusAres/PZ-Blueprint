@@ -69,7 +69,8 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
 
   switch (type) {
     case "bed":
-    case "medicalBed": {
+    case "medicalBed":
+    case "gurney": {
       rect(svg, 3, 3, width - 6, height - 6, color, darker, 2, 4);
       rect(svg, 4, 4, width - 8, 6, darker, null, 0, 3);
       rect(svg, 6, 8, width - 12, Math.min(16, height / 3), lighter, darker, 1, 3);
@@ -95,7 +96,24 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       }
       break;
     }
-    case "desk": {
+    case "armchair": {
+      rect(svg, 6, height - 20, width - 12, 12, color, darker, 2, 4);
+      rect(svg, 8, 8, width - 16, height - 30, lighter, darker, 2, 4);
+      rect(svg, 4, 12, 6, height - 28, mid, darker, 2, 3);
+      rect(svg, width - 10, 12, 6, height - 28, mid, darker, 2, 3);
+      break;
+    }
+    case "couch": {
+      rect(svg, 4, height - 20, width - 8, 12, color, darker, 2, 4);
+      rect(svg, 6, 10, width - 12, height - 28, lighter, darker, 2, 4);
+      rect(svg, 8, 12, width / 2 - 10, height - 32, mid, darker, 1, 3);
+      rect(svg, width / 2 + 2, 12, width / 2 - 10, height - 32, mid, darker, 1, 3);
+      rect(svg, 4, 10, 6, height - 28, mid, darker, 2, 3);
+      rect(svg, width - 10, 10, 6, height - 28, mid, darker, 2, 3);
+      break;
+    }
+    case "desk":
+    case "officeTable": {
       rect(svg, 2, 6, width - 4, height - 12, color, darker, 2, 4);
       rect(svg, 5, 9, width - 10, height - 18, lighter, null, 0, 3);
       rect(svg, width * 0.62, height * 0.18, width * 0.3, height * 0.58, mid, darker, 2, 2);
@@ -104,6 +122,22 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       rect(svg, width * 0.72, height * 0.32, 6, 2, "#333", null, 0, 1);
       rect(svg, width * 0.72, height * 0.48, 6, 2, "#333", null, 0, 1);
       circle(svg, width * 0.25, height * 0.3, 2.5, "#2b1b0f");
+      break;
+    }
+    case "diningTable":
+    case "kitchenTable":
+    case "kitchenIsland":
+    case "tvStand": {
+      rect(svg, 4, 6, width - 8, height - 12, color, darker, 2, 4);
+      rect(svg, 6, 8, width - 12, height - 16, lighter, null, 0, 3);
+      line(svg, width / 2, 8, width / 2, height - 8, darker, 1);
+      line(svg, 8, height / 2, width - 8, height / 2, darker, 1);
+      break;
+    }
+    case "coffeeTable": {
+      rect(svg, 8, 10, width - 16, height - 20, color, darker, 2, 4);
+      rect(svg, 10, 12, width - 20, height - 24, lighter, null, 0, 3);
+      line(svg, width / 2, 12, width / 2, height - 12, darker, 1);
       break;
     }
     case "computer": {
@@ -150,7 +184,8 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       break;
     }
     case "miniFridge":
-    case "largeFridge": {
+    case "largeFridge":
+    case "freezer": {
       rect(svg, 8, 6, width - 16, height - 12, color, darker, 2, 3);
       rect(svg, 10, 8, width - 20, height * 0.38, mid, darker, 1, 2);
       line(svg, 10, height * 0.45, width - 10, height * 0.45, darker, 1);
@@ -171,12 +206,20 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       break;
     }
     case "washer":
-    case "dryer": {
+    case "dryer":
+    case "dishwasher": {
       rect(svg, 6, 6, width - 12, height - 12, color, darker, 2, 3);
       rect(svg, 10, 10, width - 20, 6, lighter, null, 0, 2);
       rect(svg, width - 18, 12, 6, 3, "#666", null, 0, 1);
       circle(svg, width / 2, height / 2 + 4, Math.min(width, height) * 0.2, lighter, darker, 2);
       circle(svg, width / 2, height / 2 + 4, Math.min(width, height) * 0.1, "#555", null, 0);
+      break;
+    }
+    case "microwave": {
+      rect(svg, 8, 10, width - 16, height - 20, color, darker, 2, 3);
+      rect(svg, 12, 14, width - 24, height * 0.35, "#233", null, 0, 2);
+      rect(svg, width - 14, 14, 3, height * 0.35, "#444", null, 0, 1);
+      rect(svg, 10, height * 0.65, width - 20, 4, lighter, null, 0, 2);
       break;
     }
     case "poolTable": {
@@ -188,7 +231,8 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       circle(svg, width - 8, height - 8, 3, "#222");
       break;
     }
-    case "jukebox": {
+    case "jukebox":
+    case "arcadeMachine": {
       rect(svg, 8, 4, width - 16, height - 8, color, darker, 2, 6);
       circle(svg, width / 2, height * 0.55, Math.min(width, height) * 0.2, lighter, darker, 2);
       rect(svg, 12, 10, width - 24, 6, lighter, null, 0, 2);
@@ -215,11 +259,24 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
     }
     case "storageBox":
     case "shelf":
-    case "wallShelf": {
+    case "bookcase":
+    case "dresser":
+    case "wardrobe":
+    case "metalShelf":
+    case "toolCabinet": {
       rect(svg, 6, 10, width - 12, height - 20, color, darker, 2, 2);
       line(svg, 8, height / 2, width - 8, height / 2, darker, 2);
       line(svg, 8, height / 2 + 8, width - 8, height / 2 + 8, darker, 1);
       line(svg, 8, height / 2 - 8, width - 8, height / 2 - 8, darker, 1);
+      break;
+    }
+    case "wallShelf":
+    case "whiteboard":
+    case "medCabinet":
+    case "towelRack": {
+      rect(svg, 6, height * 0.2, width - 12, height * 0.6, color, darker, 2, 2);
+      rect(svg, 8, height * 0.28, width - 16, height * 0.2, lighter, null, 0, 2);
+      line(svg, 10, height * 0.55, width - 10, height * 0.55, darker, 1);
       break;
     }
     case "trashcan": {
@@ -233,6 +290,14 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       rect(svg, 10, 6, width - 20, height - 12, color, darker, 2, 6);
       rect(svg, 10, height / 2, width - 20, 4, darker, null, 0, 2);
       rect(svg, 12, 10, width - 24, 4, lighter, null, 0, 2);
+      break;
+    }
+    case "generator": {
+      rect(svg, 6, 8, width - 12, height - 16, color, darker, 2, 4);
+      rect(svg, 10, 12, width - 20, height - 24, mid, darker, 1, 3);
+      line(svg, 12, height / 2, width - 12, height / 2, darker, 1);
+      circle(svg, width * 0.3, height * 0.3, 3, "#222");
+      circle(svg, width * 0.7, height * 0.3, 3, "#222");
       break;
     }
     case "waterTank": {
@@ -265,6 +330,13 @@ export function createFurnitureIcon(type, widthTiles, heightTiles, color) {
       circle(svg, width - 10, 10, 4, lighter, darker, 2);
       line(svg, width - 10, 14, width - 10, 20, lighter, 2);
       circle(svg, width / 2, height - 12, 4, "#999", null, 0);
+      break;
+    }
+    case "bathtub": {
+      rect(svg, 4, 8, width - 8, height - 16, color, darker, 2, 10);
+      rect(svg, 8, 12, width - 16, height - 24, lighter, null, 0, 10);
+      circle(svg, width * 0.3, height * 0.35, 3, "#999");
+      circle(svg, width * 0.7, height * 0.35, 3, "#999");
       break;
     }
 

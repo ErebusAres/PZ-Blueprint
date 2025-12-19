@@ -48,7 +48,8 @@ a {
 }
 
 .topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   justify-content: space-between;
   padding: 18px 28px;
@@ -62,6 +63,7 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
+  justify-self: start;
 }
 
 .brand-mark {
@@ -89,9 +91,32 @@ a {
   letter-spacing: 1.5px;
 }
 
+.topbar .project-title-row {
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.topbar .project-title {
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.topbar .project-meta .chip {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
 .brand-subtitle {
   font-size: 13px;
   color: var(--muted);
+}
+
+.topbar-center {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  text-align: center;
 }
 
 .top-links {
@@ -116,6 +141,15 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-self: end;
+}
+
+.grid-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
 }
 
 .rotation {
@@ -125,6 +159,32 @@ a {
   font-size: 12px;
   color: var(--muted);
   margin-right: 6px;
+}
+
+.export-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.export-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(16, 20, 26, 0.98);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  min-width: 170px;
+}
+
+.export-popover .chip {
+  width: 100%;
+  justify-content: center;
+  display: inline-flex;
 }
 
 .btn {
@@ -289,6 +349,8 @@ a {
   display: flex;
   gap: 8px;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .toolbar-chip {
@@ -305,6 +367,18 @@ a {
 
 .toolbar-chip.is-static {
   cursor: default;
+}
+
+.toolbar-rotation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.toolbar-rotation .chip {
+  padding: 6px 12px;
 }
 
 .grid-size-popover {
@@ -355,22 +429,41 @@ a {
 
 .canvas-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
+  text-align: center;
 }
 
-.canvas-header h1 {
-  margin: 0;
-  font-family: "Bebas Neue", sans-serif;
-  font-size: 34px;
-  letter-spacing: 1.5px;
+.project-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.canvas-header p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 14px;
+.project-title {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  transition: color 0.2s ease;
+}
+
+.project-title:hover {
+  color: rgba(240, 179, 95, 0.9);
+}
+
+.project-meta {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.project-meta .chip {
+  padding: 4px 10px;
+  font-size: 11px;
 }
 
 .canvas-actions {
@@ -378,6 +471,7 @@ a {
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
 }
 
 .action-group {
@@ -950,6 +1044,97 @@ body.grid-hidden #grid-lines {
   display: none;
 }
 
+.options-dock {
+  position: fixed;
+  left: 18px;
+  bottom: 20px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.status-dock {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  z-index: 75;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.status-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.zoom-controls {
+  align-items: center;
+}
+
+.options-btn {
+  pointer-events: auto;
+  background: rgba(16, 20, 26, 0.95);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.options-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(240, 179, 95, 0.4);
+}
+
+.options-popover {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 12px);
+  background: rgba(16, 20, 26, 0.98);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  min-width: 200px;
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.options-group.grid-options {
+  position: relative;
+}
+
+.options-popover .grid-size-popover {
+  top: auto;
+  right: auto;
+  left: 0;
+  bottom: calc(100% + 10px);
+}
+
+.chip.danger {
+  border-color: rgba(224, 113, 113, 0.5);
+  color: #f4c3c3;
+}
+
 .drawer-bar {
   display: flex;
   align-items: center;
@@ -1292,6 +1477,24 @@ body.grid-hidden #grid-lines {
 }
 
 @media (max-width: 1100px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    row-gap: 10px;
+  }
+
+  .topbar-center {
+    justify-self: start;
+  }
+
+  .topbar .project-title-row {
+    justify-content: flex-start;
+  }
+
+  .top-actions {
+    justify-self: start;
+  }
+
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }

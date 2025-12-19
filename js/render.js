@@ -7,11 +7,16 @@ const TILE = 40;
 const WALL_THICKNESS = 4;
 const DOOR_THICKNESS = 4;
 const DOOR_SPAN = 0.6;
+const GRID_BASE_COLOR = "#0f141b";
 const textureCache = new Map();
+const minimapIconCache = new Map();
 const PATTERN_SIZES = {
   sand: 200,
   hay: 200,
   dirt: 200,
+  mud: 200,
+  gravel: 200,
+  leafLitter: 200,
   grass: 200,
   dryGrass: 200,
   lushGrass: 200,
@@ -19,13 +24,18 @@ const PATTERN_SIZES = {
   carpet: 180,
   checkerTile: TILE,
   concrete: 200,
+  concreteCracked: 200,
   wood: 200,
   woodPlank: 200,
+  woodParquet: 180,
   medical: 160,
   bathroom: 160,
   kitchen: 200,
+  tileTerracotta: 160,
+  tileSlate: 160,
   water: 320,
   concreteBlock: 200,
+  cobblestone: 200,
   parkingLot: 200,
   asphalt: 200,
   brick: 200
@@ -38,6 +48,15 @@ const FURNITURE_FOOTPRINTS = {
   chair: { x: 0.6, y: 0.6 },
   deskChair: { x: 0.6, y: 0.6 },
   desk: { x: 0.95, y: 0.85 },
+  officeTable: { x: 0.95, y: 0.7 },
+  bookcase: { x: 0.85, y: 0.7 },
+  dresser: { x: 0.8, y: 0.7 },
+  wardrobe: { x: 0.85, y: 0.85 },
+  nightstand: { x: 0.6, y: 0.6 },
+  couch: { x: 0.95, y: 0.75 },
+  armchair: { x: 0.7, y: 0.7 },
+  coffeeTable: { x: 0.6, y: 0.6 },
+  tvStand: { x: 0.95, y: 0.6 },
   computer: { x: 0.5, y: 0.5 },
   fileCabinet: { x: 0.75, y: 0.75 },
   sink: { x: 0.45, y: 0.45 },
@@ -46,25 +65,40 @@ const FURNITURE_FOOTPRINTS = {
   medicalCounter: { x: 1, y: 0.5 },
   miniFridge: { x: 0.75, y: 0.75 },
   largeFridge: { x: 0.85, y: 0.85 },
+  freezer: { x: 0.8, y: 0.8 },
   stove: { x: 0.8, y: 0.8 },
   oldOven: { x: 0.8, y: 0.8 },
+  microwave: { x: 0.5, y: 0.5 },
+  dishwasher: { x: 0.8, y: 0.8 },
+  kitchenTable: { x: 0.95, y: 0.7 },
+  diningTable: { x: 0.95, y: 0.95 },
+  kitchenIsland: { x: 0.95, y: 0.7 },
   washer: { x: 0.75, y: 0.75 },
   dryer: { x: 0.75, y: 0.75 },
   poolTable: { x: 0.95, y: 0.95 },
   jukebox: { x: 0.7, y: 0.7 },
+  arcadeMachine: { x: 0.7, y: 0.7 },
   medicalTray: { x: 0.45, y: 0.45 },
   ivStand: { x: 0.45, y: 0.45 },
+  gurney: { x: 0.95, y: 0.7 },
   storageBox: { x: 0.6, y: 0.6 },
   shelf: { x: 0.85, y: 0.6 },
   wallShelf: { x: 0.85, y: 0.35 },
+  metalShelf: { x: 0.85, y: 0.6 },
+  toolCabinet: { x: 0.8, y: 0.7 },
+  generator: { x: 0.75, y: 0.75 },
   trashcan: { x: 0.55, y: 0.55 },
   waterBarrel: { x: 0.7, y: 0.7 },
   schoolLockers: { x: 0.9, y: 0.45 },
   waterTank: { x: 0.6, y: 0.6 },
+  whiteboard: { x: 0.85, y: 0.35 },
+  medCabinet: { x: 0.85, y: 0.35 },
+  towelRack: { x: 0.85, y: 0.3 },
   bathroomSink: { x: 0.45, y: 0.45 },
   bathroomCounter: { x: 1, y: 0.5 },
   toilet: { x: 0.65, y: 0.8 },
-  shower: { x: 0.9, y: 0.9 }
+  shower: { x: 0.9, y: 0.9 },
+  bathtub: { x: 0.95, y: 0.7 }
 };
 
 function hashString(value) {
@@ -176,7 +210,7 @@ export function renderBlueprint(data) {
     addFurniture(furnitureLayer, item, wallSet, baseMounts);
   }
 
-  updateMinimap(data);
+  void updateMinimap(data);
 }
 
 function getFurnitureLayer(item) {
@@ -194,6 +228,21 @@ function getFurnitureFootprint(kind, rotation = 0) {
     [scaleX, scaleY] = [scaleY, scaleX];
   }
   return { scaleX, scaleY };
+}
+
+function buildRoundedRectPath(ctx, x, y, width, height, radius) {
+  const clamped = Math.max(0, Math.min(radius, Math.min(width, height) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + clamped, y);
+  ctx.lineTo(x + width - clamped, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + clamped);
+  ctx.lineTo(x + width, y + height - clamped);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - clamped, y + height);
+  ctx.lineTo(x + clamped, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - clamped);
+  ctx.lineTo(x, y + clamped);
+  ctx.quadraticCurveTo(x, y, x + clamped, y);
+  ctx.closePath();
 }
 
 function addFloor(layer, item, floorMap, wallSet, doorSet) {
@@ -618,11 +667,14 @@ function addDoor(layer, row, col, dir, doorType = "standard") {
   layer.appendChild(door);
 }
 
-function updateMinimap(data) {
+let minimapRenderToken = 0;
+
+async function updateMinimap(data) {
   const canvas = document.getElementById("minimap");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
+  const token = (minimapRenderToken += 1);
 
   const width = canvas.width;
   const height = canvas.height;
@@ -632,11 +684,35 @@ function updateMinimap(data) {
   const scaleY = height / rows;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#0f141b";
+  ctx.fillStyle = GRID_BASE_COLOR;
   ctx.fillRect(0, 0, width, height);
 
   const floorSizeX = Math.max(1, Math.ceil(scaleX));
   const floorSizeY = Math.max(1, Math.ceil(scaleY));
+
+  const wallSet = new Set();
+  const furnitureItems = [];
+  for (const item of data) {
+    if (item.type === "wall") {
+      wallSet.add(`${item.row}:${item.col}:${item.dir}`);
+    } else if (item.type === "furniture") {
+      furnitureItems.push(item);
+    }
+  }
+
+  const baseMounts = new Map();
+  for (const item of furnitureItems) {
+    const config = FURNITURE[item.kind];
+    if (!config || config.wallMount !== "wall-only") continue;
+    const slot = item.slot ?? "base";
+    if (slot !== "base") continue;
+    const rotation = item.rotation ?? 0;
+    const preferred = item.mountDir ?? rotationToDir(rotation);
+    const mountDir = findWallAttachment(item.row, item.col, wallSet, preferred);
+    if (mountDir) {
+      baseMounts.set(`${item.row}:${item.col}`, mountDir);
+    }
+  }
 
   for (const item of data) {
     if (item.type !== "floor") continue;
@@ -713,24 +789,615 @@ function updateMinimap(data) {
     }
   }
 
-  for (const item of data) {
-    if (item.type !== "furniture") continue;
+  for (const item of furnitureItems) {
     const config = FURNITURE[item.kind];
     if (!config) continue;
-    const color = config.color;
-    const widthTiles = config.size?.[0] ?? 1;
-    const heightTiles = config.size?.[1] ?? 1;
-    ctx.fillStyle = color;
-    ctx.fillRect(
-      Math.floor(item.col * scaleX),
-      Math.floor(item.row * scaleY),
-      Math.max(1, Math.ceil(widthTiles * scaleX)),
-      Math.max(1, Math.ceil(heightTiles * scaleY))
+    const baseWidthTiles = config.size?.[0] ?? 1;
+    const baseHeightTiles = config.size?.[1] ?? 1;
+    const rotation = item.rotation ?? 0;
+    const baseKey = `${item.row}:${item.col}`;
+    const baseMountDir = baseMounts.get(baseKey) ?? null;
+    let displayRotation = rotation;
+    let mountDir = null;
+
+    if (config.wallMount === "wall-only") {
+      const preferred = item.mountDir ?? rotationToDir(rotation);
+      mountDir = findWallAttachment(item.row, item.col, wallSet, preferred);
+      if (mountDir) {
+        displayRotation = dirToRotation(mountDir);
+      }
+    } else if (baseMountDir) {
+      mountDir = baseMountDir;
+      displayRotation = dirToRotation(baseMountDir);
+    }
+
+    let widthTiles = baseWidthTiles;
+    let heightTiles = baseHeightTiles;
+    if (displayRotation === 90 || displayRotation === 270) {
+      [widthTiles, heightTiles] = [baseHeightTiles, baseWidthTiles];
+    }
+
+    const { scaleX: footprintX, scaleY: footprintY } = getFurnitureFootprint(
+      item.kind,
+      displayRotation
     );
+    const slot = item.slot ?? "base";
+    const stackScale = slot === "base" ? 1 : 0.92;
+    const stackShift = slot === "base" ? 0 : (-3 / TILE) * scaleY;
+
+    const baseWidthPx = widthTiles * scaleX;
+    const baseHeightPx = heightTiles * scaleY;
+    const drawWidthPx = baseWidthPx * footprintX * stackScale;
+    const drawHeightPx = baseHeightPx * footprintY * stackScale;
+    let shiftX = 0;
+    let shiftY = 0;
+
+    if (mountDir) {
+      const mountShiftX = ((1 - footprintX) * baseWidthPx) / 2;
+      const mountShiftY = ((1 - footprintY) * baseHeightPx) / 2;
+      if (mountDir === "n") {
+        shiftY = -mountShiftY;
+      } else if (mountDir === "s") {
+        shiftY = mountShiftY;
+      } else if (mountDir === "w") {
+        shiftX = -mountShiftX;
+      } else if (mountDir === "e") {
+        shiftX = mountShiftX;
+      }
+    }
+
+    const x = item.col * scaleX + (baseWidthPx - drawWidthPx) / 2 + shiftX;
+    const y = item.row * scaleY + (baseHeightPx - drawHeightPx) / 2 + shiftY + stackShift;
+    const radius = Math.max(1, Math.min(drawWidthPx, drawHeightPx) * 0.2);
+
+    ctx.save();
+    ctx.fillStyle = config.color;
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.lineWidth = 1;
+    buildRoundedRectPath(ctx, x, y, drawWidthPx, drawHeightPx, radius);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    const icon = await getFurnitureIconImage(
+      item.kind,
+      baseWidthTiles,
+      baseHeightTiles,
+      config.color,
+      minimapIconCache
+    );
+    if (token !== minimapRenderToken) return;
+
+    const centerX = item.col * scaleX + baseWidthPx / 2 + shiftX;
+    const centerY = item.row * scaleY + baseHeightPx / 2 + shiftY + stackShift;
+    const iconWidth = baseWidthTiles * scaleX * footprintX * stackScale;
+    const iconHeight = baseHeightTiles * scaleY * footprintY * stackScale;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate((displayRotation * Math.PI) / 180);
+    ctx.drawImage(icon, -iconWidth / 2, -iconHeight / 2, iconWidth, iconHeight);
+    ctx.restore();
   }
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
   ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+}
+
+function getExportBounds(items) {
+  let minRow = Infinity;
+  let minCol = Infinity;
+  let maxRow = -Infinity;
+  let maxCol = -Infinity;
+
+  items.forEach(item => {
+    if (item.type === "floor") {
+      minRow = Math.min(minRow, item.row);
+      minCol = Math.min(minCol, item.col);
+      maxRow = Math.max(maxRow, item.row);
+      maxCol = Math.max(maxCol, item.col);
+      return;
+    }
+    if (item.type === "wall" || item.type === "door") {
+      minRow = Math.min(minRow, item.row);
+      minCol = Math.min(minCol, item.col);
+      maxRow = Math.max(maxRow, item.row);
+      maxCol = Math.max(maxCol, item.col);
+      return;
+    }
+    if (item.type === "furniture") {
+      const config = FURNITURE[item.kind];
+      if (!config) return;
+      let width = config.size?.[0] ?? 1;
+      let height = config.size?.[1] ?? 1;
+      if (item.rotation === 90 || item.rotation === 270) {
+        [width, height] = [height, width];
+      }
+      minRow = Math.min(minRow, item.row);
+      minCol = Math.min(minCol, item.col);
+      maxRow = Math.max(maxRow, item.row + height - 1);
+      maxCol = Math.max(maxCol, item.col + width - 1);
+    }
+  });
+
+  if (!Number.isFinite(minRow)) return null;
+
+  return { minRow, minCol, maxRow, maxCol };
+}
+
+function loadTextureImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function getFloorPattern(ctx, material, tint, tintSecondary, cache) {
+  const key = tintSecondary
+    ? `${material}:${tint ?? "base"}:${tintSecondary}`
+    : tint
+      ? `${material}:${tint}`
+      : material;
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const { texture } = getFloorTexture(material, tint, tintSecondary);
+  const img = await loadTextureImage(texture);
+  const pattern = ctx.createPattern(img, "repeat");
+  const payload = { pattern };
+  cache.set(key, payload);
+  return payload;
+}
+
+function drawTriangleClip(ctx, x, y, corner) {
+  ctx.beginPath();
+  if (corner === "tl") {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + TILE, y);
+    ctx.lineTo(x, y + TILE);
+  } else if (corner === "tr") {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + TILE, y);
+    ctx.lineTo(x + TILE, y + TILE);
+  } else if (corner === "bl") {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y + TILE);
+    ctx.lineTo(x + TILE, y + TILE);
+  } else if (corner === "br") {
+    ctx.moveTo(x + TILE, y);
+    ctx.lineTo(x + TILE, y + TILE);
+    ctx.lineTo(x, y + TILE);
+  }
+  ctx.closePath();
+}
+
+function drawQuarterClip(ctx, x, y, corner) {
+  const half = TILE / 2;
+  ctx.beginPath();
+  if (corner === "tl") {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + half, y);
+    ctx.lineTo(x, y + half);
+  } else if (corner === "tr") {
+    ctx.moveTo(x + half, y);
+    ctx.lineTo(x + TILE, y);
+    ctx.lineTo(x + TILE, y + half);
+  } else if (corner === "bl") {
+    ctx.moveTo(x, y + half);
+    ctx.lineTo(x + half, y + TILE);
+    ctx.lineTo(x, y + TILE);
+  } else if (corner === "br") {
+    ctx.moveTo(x + TILE, y + half);
+    ctx.lineTo(x + TILE, y + TILE);
+    ctx.lineTo(x + half, y + TILE);
+  }
+  ctx.closePath();
+}
+
+async function drawBlendOverlay(
+  ctx,
+  patternCache,
+  material,
+  row,
+  col,
+  clipMode,
+  corner,
+  tint,
+  tintSecondary
+) {
+  const { pattern } = await getFloorPattern(
+    ctx,
+    material,
+    tint,
+    tintSecondary,
+    patternCache
+  );
+  const x = col * TILE;
+  const y = row * TILE;
+  ctx.save();
+  if (clipMode === "triangle") {
+    drawTriangleClip(ctx, x, y, corner);
+  } else {
+    drawQuarterClip(ctx, x, y, corner);
+  }
+  ctx.clip();
+  ctx.fillStyle = pattern;
+  ctx.fillRect(x, y, TILE, TILE);
+  ctx.restore();
+}
+
+async function drawFloorTile(
+  ctx,
+  item,
+  floorMap,
+  wallSet,
+  doorSet,
+  patternCache
+) {
+  const material = item.material ?? "sand";
+  const { pattern } = await getFloorPattern(
+    ctx,
+    material,
+    item.tint,
+    item.tintSecondary,
+    patternCache
+  );
+  const x = item.col * TILE;
+  const y = item.row * TILE;
+  ctx.fillStyle = pattern;
+  ctx.fillRect(x, y, TILE, TILE);
+
+  if (!item.blend || !item.blend.secondary) return;
+  if (item.blend.secondary === item.material) return;
+
+  if (item.blend.mode === "diag") {
+    const corner = item.blend.variant === "backslash" ? "tr" : "tl";
+    await drawBlendOverlay(
+      ctx,
+      patternCache,
+      item.blend.secondary,
+      item.row,
+      item.col,
+      "triangle",
+      corner,
+      item.blend.secondaryTint,
+      item.blend.secondaryTintSecondary
+    );
+    return;
+  }
+
+  if (item.blend.mode === "quarter") {
+    await drawBlendOverlay(
+      ctx,
+      patternCache,
+      item.blend.secondary,
+      item.row,
+      item.col,
+      "quarter",
+      item.blend.corner,
+      item.blend.secondaryTint,
+      item.blend.secondaryTintSecondary
+    );
+    return;
+  }
+
+  if (item.blend.mode === "diag-auto") {
+    const corner = resolveAutoBlendCorner(
+      item.row,
+      item.col,
+      item.blend.secondary,
+      floorMap,
+      wallSet,
+      doorSet
+    );
+    if (!corner) return;
+    await drawBlendOverlay(
+      ctx,
+      patternCache,
+      item.blend.secondary,
+      item.row,
+      item.col,
+      "triangle",
+      corner,
+      item.blend.secondaryTint,
+      item.blend.secondaryTintSecondary
+    );
+  }
+}
+
+async function getFurnitureIconImage(kind, widthTiles, heightTiles, color, cache) {
+  const key = `${kind}:${widthTiles}:${heightTiles}:${color}`;
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const svg = createFurnitureIcon(kind, widthTiles, heightTiles, color);
+  const serialized = new XMLSerializer().serializeToString(svg);
+  const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
+  const img = await loadTextureImage(dataUrl);
+  cache.set(key, img);
+  return img;
+}
+
+async function drawFurnitureTile(ctx, item, wallSet, baseMounts, iconCache) {
+  const config = FURNITURE[item.kind];
+  if (!config) return;
+  const baseWidthTiles = config.size?.[0] ?? 1;
+  const baseHeightTiles = config.size?.[1] ?? 1;
+
+  const rotation = item.rotation ?? 0;
+  const baseKey = `${item.row}:${item.col}`;
+  const baseMountDir = baseMounts?.get(baseKey) ?? null;
+  let displayRotation = rotation;
+  let mountDir = null;
+
+  if (config.wallMount === "wall-only") {
+    const preferred = item.mountDir ?? rotationToDir(rotation);
+    mountDir = findWallAttachment(item.row, item.col, wallSet, preferred);
+    if (mountDir) {
+      displayRotation = dirToRotation(mountDir);
+    }
+  } else if (baseMountDir) {
+    mountDir = baseMountDir;
+    displayRotation = dirToRotation(baseMountDir);
+  }
+
+  let widthTiles = baseWidthTiles;
+  let heightTiles = baseHeightTiles;
+  if (displayRotation === 90 || displayRotation === 270) {
+    [widthTiles, heightTiles] = [baseHeightTiles, baseWidthTiles];
+  }
+
+  const { scaleX, scaleY } = getFurnitureFootprint(item.kind, displayRotation);
+  const slot = item.slot ?? "base";
+  const stackScale = slot === "base" ? 1 : 0.92;
+  const stackShiftY = slot === "base" ? 0 : -3;
+
+  const width = widthTiles * TILE;
+  const height = heightTiles * TILE;
+  const x = item.col * TILE;
+  const y = item.row * TILE;
+  let shiftX = 0;
+  let shiftY = 0;
+
+  if (mountDir) {
+    const mountShiftX = ((1 - scaleX) * width) / 2;
+    const mountShiftY = ((1 - scaleY) * height) / 2;
+    if (mountDir === "n") {
+      shiftY = -mountShiftY;
+    } else if (mountDir === "s") {
+      shiftY = mountShiftY;
+    } else if (mountDir === "w") {
+      shiftX = -mountShiftX;
+    } else if (mountDir === "e") {
+      shiftX = mountShiftX;
+    }
+  }
+
+  const centerX = x + width / 2 + shiftX;
+  const centerY = y + height / 2 + shiftY + stackShiftY;
+  const radius = 10;
+  const totalScaleX = scaleX * stackScale;
+  const totalScaleY = scaleY * stackScale;
+
+  ctx.save();
+  ctx.translate(centerX, centerY);
+  ctx.scale(totalScaleX, totalScaleY);
+
+  const drawX = -width / 2;
+  const drawY = -height / 2;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+  ctx.shadowBlur = 18;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = config.color;
+  buildRoundedRectPath(ctx, drawX, drawY, width, height, radius);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = config.color;
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.55)";
+  ctx.lineWidth = 1;
+  if (config.within) {
+    ctx.setLineDash([4, 2]);
+  }
+  buildRoundedRectPath(ctx, drawX, drawY, width, height, radius);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalCompositeOperation = "soft-light";
+  const gradient = ctx.createLinearGradient(drawX, drawY, drawX + width, drawY + height);
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.3)");
+  gradient.addColorStop(1, "rgba(0, 0, 0, 0.2)");
+  ctx.fillStyle = gradient;
+  buildRoundedRectPath(ctx, drawX, drawY, width, height, radius);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.lineWidth = 1;
+  buildRoundedRectPath(
+    ctx,
+    drawX + 2,
+    drawY + 2,
+    width - 4,
+    height - 4,
+    Math.max(2, radius - 2)
+  );
+  ctx.stroke();
+  ctx.restore();
+
+  const icon = await getFurnitureIconImage(
+    item.kind,
+    baseWidthTiles,
+    baseHeightTiles,
+    config.color,
+    iconCache
+  );
+  const iconWidth = baseWidthTiles * TILE;
+  const iconHeight = baseHeightTiles * TILE;
+  ctx.save();
+  ctx.rotate((displayRotation * Math.PI) / 180);
+  ctx.drawImage(icon, -iconWidth / 2, -iconHeight / 2, iconWidth, iconHeight);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+function drawWallToCanvas(ctx, wall) {
+  const color = WALL_TYPES[wall.wallType]?.color ?? WALL_TYPES.standard.color;
+  const half = WALL_THICKNESS / 2;
+  const x0 = wall.col * TILE;
+  const y0 = wall.row * TILE;
+  ctx.fillStyle = color;
+  if (wall.dir === "n") {
+    ctx.fillRect(x0 - half, y0 - half, TILE + WALL_THICKNESS, WALL_THICKNESS);
+  } else if (wall.dir === "s") {
+    ctx.fillRect(
+      x0 - half,
+      (wall.row + 1) * TILE - half,
+      TILE + WALL_THICKNESS,
+      WALL_THICKNESS
+    );
+  } else if (wall.dir === "w") {
+    ctx.fillRect(x0 - half, y0 - half, WALL_THICKNESS, TILE + WALL_THICKNESS);
+  } else if (wall.dir === "e") {
+    ctx.fillRect(
+      (wall.col + 1) * TILE - half,
+      y0 - half,
+      WALL_THICKNESS,
+      TILE + WALL_THICKNESS
+    );
+  }
+}
+
+function drawDoorToCanvas(ctx, door) {
+  const color = DOOR_TYPES[door.doorType]?.color ?? DOOR_TYPES.standard.color;
+  const half = DOOR_THICKNESS / 2;
+  const span = TILE * DOOR_SPAN;
+  const offset = (TILE - span) / 2;
+  const x0 = door.col * TILE;
+  const y0 = door.row * TILE;
+  ctx.fillStyle = color;
+  if (door.dir === "n") {
+    ctx.fillRect(x0 + offset, y0 - half, span, DOOR_THICKNESS);
+  } else if (door.dir === "s") {
+    ctx.fillRect(x0 + offset, (door.row + 1) * TILE - half, span, DOOR_THICKNESS);
+  } else if (door.dir === "w") {
+    ctx.fillRect(x0 - half, y0 + offset, DOOR_THICKNESS, span);
+  } else if (door.dir === "e") {
+    ctx.fillRect((door.col + 1) * TILE - half, y0 + offset, DOOR_THICKNESS, span);
+  }
+}
+
+function drawGridOverlay(ctx, rows, cols) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+  ctx.lineWidth = 1;
+  for (let c = 0; c <= cols; c += 1) {
+    const x = c * TILE + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, rows * TILE);
+    ctx.stroke();
+  }
+  for (let r = 0; r <= rows; r += 1) {
+    const y = r * TILE + 0.5;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(cols * TILE, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+export async function renderBlueprintToCanvas(data, options = {}) {
+  const items = Array.isArray(data) ? data : [];
+  const bounds = getExportBounds(items);
+  if (!bounds) return null;
+
+  const { minRow, minCol, maxRow, maxCol } = bounds;
+  const rows = maxRow - minRow + 1;
+  const cols = maxCol - minCol + 1;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = cols * TILE;
+  canvas.height = rows * TILE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  if (options.includeGrid) {
+    ctx.fillStyle = GRID_BASE_COLOR;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  const floorMap = new Map();
+  const wallSet = new Set();
+  const doorSet = new Set();
+  const walls = [];
+  const doors = [];
+  const furnitureItems = [];
+  const baseMounts = new Map();
+
+  for (const item of items) {
+    if (item.type === "floor") {
+      floorMap.set(`${item.row}:${item.col}`, item);
+    } else if (item.type === "wall") {
+      wallSet.add(`${item.row}:${item.col}:${item.dir}`);
+      walls.push(item);
+    } else if (item.type === "door") {
+      doorSet.add(`${item.row}:${item.col}:${item.dir}`);
+      doors.push(item);
+    } else if (item.type === "furniture") {
+      furnitureItems.push(item);
+    }
+  }
+
+  for (const item of furnitureItems) {
+    const config = FURNITURE[item.kind];
+    if (!config || config.wallMount !== "wall-only") continue;
+    const slot = item.slot ?? "base";
+    if (slot !== "base") continue;
+    const rotation = item.rotation ?? 0;
+    const preferred = item.mountDir ?? rotationToDir(rotation);
+    const mountDir = findWallAttachment(item.row, item.col, wallSet, preferred);
+    if (mountDir) {
+      baseMounts.set(`${item.row}:${item.col}`, mountDir);
+    }
+  }
+
+  const patternCache = new Map();
+  const iconCache = new Map();
+
+  ctx.save();
+  ctx.translate(-minCol * TILE, -minRow * TILE);
+
+  for (const item of floorMap.values()) {
+    await drawFloorTile(ctx, item, floorMap, wallSet, doorSet, patternCache);
+  }
+
+  for (const item of furnitureItems) {
+    await drawFurnitureTile(ctx, item, wallSet, baseMounts, iconCache);
+  }
+
+  for (const item of walls) {
+    drawWallToCanvas(ctx, item);
+  }
+
+  for (const item of doors) {
+    drawDoorToCanvas(ctx, item);
+  }
+
+  ctx.restore();
+
+  if (options.includeGrid) {
+    drawGridOverlay(ctx, rows, cols);
+  }
+
+  return canvas;
 }
 
 function getFloorTexture(material, tint, tintSecondary) {
@@ -934,6 +1601,75 @@ function createFloorTexture(material, size, tint, tintSecondary) {
       ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
     }
+  } else if (material === "mud") {
+    const speckleCount = Math.round(area / 70);
+    for (let i = 0; i < speckleCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.8, 2.8);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(85, 60, 40, 0.35)"
+        : "rgba(60, 40, 25, 0.35)";
+      ctx.fillRect(x, y, dot, dot);
+    }
+    const puddleCount = Math.round(area / 200);
+    for (let i = 0; i < puddleCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const radius = randRange(rand, 8, 18);
+      ctx.fillStyle = "rgba(40, 30, 20, 0.25)";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (material === "gravel") {
+    const stoneCount = Math.round(area / 50);
+    for (let i = 0; i < stoneCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const radius = randRange(rand, 0.8, 2.6);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(150, 150, 140, 0.4)"
+        : "rgba(110, 110, 105, 0.4)";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const dustCount = Math.round(area / 90);
+    for (let i = 0; i < dustCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 1.6);
+      ctx.fillStyle = "rgba(175, 170, 160, 0.25)";
+      ctx.fillRect(x, y, dot, dot);
+    }
+  } else if (material === "leafLitter") {
+    const leafCount = Math.round(area / 220);
+    for (let i = 0; i < leafCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const w = randRange(rand, 6, 12);
+      const h = randRange(rand, 3, 6);
+      const angle = randRange(rand, 0, Math.PI * 2);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(110, 95, 55, 0.5)"
+        : "rgba(90, 75, 45, 0.45)";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    const fleckCount = Math.round(area / 120);
+    for (let i = 0; i < fleckCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 1.8);
+      ctx.fillStyle = "rgba(70, 80, 40, 0.3)";
+      ctx.fillRect(x, y, dot, dot);
+    }
   } else if (material === "hay") {
     const strawCount = Math.round(area / 90);
     for (let i = 0; i < strawCount; i += 1) {
@@ -1065,6 +1801,24 @@ function createFloorTexture(material, size, tint, tintSecondary) {
       ctx.lineTo(x + length, yScratch + randRange(rand, -3, 3));
       ctx.stroke();
     }
+  } else if (material === "woodParquet") {
+    const tile = 20;
+    for (let y = 0; y < size; y += tile) {
+      for (let x = 0; x < size; x += tile) {
+        const shade = Math.round(randRange(rand, -10, 12));
+        ctx.fillStyle = adjustColor(baseColor, shade);
+        ctx.fillRect(x, y, tile, tile);
+        ctx.strokeStyle = "rgba(90, 70, 45, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, tile - 1, tile - 1);
+        if (rand() > 0.7) {
+          ctx.fillStyle = "rgba(70, 50, 35, 0.5)";
+          ctx.beginPath();
+          ctx.arc(x + tile * 0.25, y + tile * 0.25, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
   } else if (material === "woodPlank") {
     const plankHeight = 20;
     for (let y = 0; y < size; y += plankHeight) {
@@ -1120,6 +1874,27 @@ function createFloorTexture(material, size, tint, tintSecondary) {
       ctx.lineTo(x + randRange(rand, -40, 40), y + randRange(rand, -40, 40));
       ctx.stroke();
     }
+  } else if (material === "concreteCracked") {
+    const speckleCount = Math.round(area / 38);
+    for (let i = 0; i < speckleCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 2.8);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(185, 185, 180, 0.35)"
+        : "rgba(150, 150, 145, 0.3)";
+      ctx.fillRect(x, y, dot, dot);
+    }
+    for (let i = 0; i < 16; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      ctx.strokeStyle = "rgba(110, 110, 105, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + randRange(rand, -60, 60), y + randRange(rand, -60, 60));
+      ctx.stroke();
+    }
   } else if (material === "concreteBlock") {
     const slab = TILE;
     ctx.lineWidth = 1;
@@ -1172,6 +1947,22 @@ function createFloorTexture(material, size, tint, tintSecondary) {
       const dot = randRange(rand, 0.6, 1.8);
       ctx.fillStyle = "rgba(175, 170, 160, 0.28)";
       ctx.fillRect(x, y, dot, dot);
+    }
+  } else if (material === "cobblestone") {
+    const stoneCount = Math.round(area / 70);
+    for (let i = 0; i < stoneCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const radius = randRange(rand, 4, 10);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(150, 145, 135, 0.5)"
+        : "rgba(120, 115, 105, 0.5)";
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(90, 85, 80, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
   } else if (material === "parkingLot" || material === "asphalt") {
     const aggregateCount = Math.round(
@@ -1271,6 +2062,54 @@ function createFloorTexture(material, size, tint, tintSecondary) {
       const y = rand() * size;
       const dot = randRange(rand, 0.6, 2.2);
       ctx.fillStyle = fleckColors[Math.floor(rand() * fleckColors.length)];
+      ctx.fillRect(x, y, dot, dot);
+    }
+  } else if (material === "tileTerracotta") {
+    const tile = 24;
+    ctx.strokeStyle = "rgba(120, 85, 60, 0.35)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= size; x += tile) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, size);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= size; y += tile) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(size, y);
+      ctx.stroke();
+    }
+    const fleckCount = Math.round(area / 120);
+    for (let i = 0; i < fleckCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 2.4);
+      ctx.fillStyle = rand() > 0.5
+        ? "rgba(205, 140, 95, 0.35)"
+        : "rgba(155, 95, 60, 0.3)";
+      ctx.fillRect(x, y, dot, dot);
+    }
+  } else if (material === "tileSlate") {
+    const tileW = 28;
+    const tileH = 20;
+    ctx.strokeStyle = "rgba(90, 95, 105, 0.5)";
+    ctx.lineWidth = 1;
+    for (let y = 0; y < size; y += tileH) {
+      const offset = ((y / tileH) % 2) * (tileW / 2);
+      for (let x = -offset; x < size; x += tileW) {
+        const shade = Math.round(randRange(rand, -12, 10));
+        ctx.fillStyle = adjustColor(baseColor, shade);
+        ctx.fillRect(x + 1, y + 1, tileW - 2, tileH - 2);
+        ctx.strokeRect(x + 0.5, y + 0.5, tileW - 1, tileH - 1);
+      }
+    }
+    const speckleCount = Math.round(area / 140);
+    for (let i = 0; i < speckleCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 1.6);
+      ctx.fillStyle = "rgba(110, 115, 125, 0.3)";
       ctx.fillRect(x, y, dot, dot);
     }
   } else if (material === "brick") {

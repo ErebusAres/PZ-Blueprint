@@ -26,40 +26,50 @@
           <span class="brand-subtitle">Collaborative Project Zomboid planner</span>
         </div>
       </div>
+      <div class="topbar-center">
+        <div class="project-title-row">
+          <h1 id="project-title" class="project-title" role="button" tabindex="0">My Blueprint</h1>
+          <div class="project-meta">
+            <button id="project-version" class="chip" type="button" aria-label="Edit version">v1</button>
+            <button id="project-version-inc" class="chip" type="button" aria-label="Increase version">+1</button>
+          </div>
+        </div>
+      </div>
       <div class="top-actions">
-        <div class="rotation">
-          <span>Rotation</span>
-          <button id="rotate-btn" class="btn ghost" type="button">North</button>
+        <div class="grid-menu">
+          <button id="grid-size" class="chip" type="button">20 x 20</button>
+          <div class="grid-size-popover is-hidden" id="grid-size-popover" role="dialog" aria-label="Grid size">
+            <div class="grid-size-field">
+              <label for="grid-rows">Rows</label>
+              <input id="grid-rows" type="number" min="5" max="200" value="20" />
+            </div>
+            <div class="grid-size-field">
+              <label for="grid-cols">Columns</label>
+              <input id="grid-cols" type="number" min="5" max="200" value="20" />
+            </div>
+            <div class="grid-size-actions">
+              <button id="grid-apply" class="chip" type="button">Apply</button>
+              <button id="grid-cancel" class="chip" type="button">Cancel</button>
+            </div>
+          </div>
         </div>
         <button id="import-btn" class="btn ghost" type="button">Import</button>
+        <div class="export-menu">
+          <button id="export-btn" class="btn ghost" type="button">Export</button>
+          <div class="export-popover is-hidden" id="export-popover" role="dialog" aria-label="Export options">
+            <button class="chip" data-export="clean" type="button">PNG (No Grid)</button>
+            <button class="chip" data-export="grid" type="button">PNG (Grid)</button>
+          </div>
+        </div>
         <button id="share-btn" class="btn primary" type="button">Share</button>
+        <button id="help-btn" class="chip help-chip" type="button" aria-label="Help">?</button>
       </div>
     </header>
 
     <main class="workspace">
       <section class="canvas-panel">
         <div class="canvas-header">
-          <div>
-            <h1 id="project-title">My Blueprint</h1>
-            <p>Plan safehouse layouts, wall lines, and loot routes.</p>
-          </div>
           <div class="canvas-actions">
-            <div class="action-group">
-              <button id="undo-btn" class="chip" type="button">Undo</button>
-              <button id="redo-btn" class="chip" type="button">Redo</button>
-            </div>
-            <div class="action-group">
-              <button id="toggle-grid" class="chip is-active" type="button">Grid On</button>
-              <button id="toggle-snap" class="chip is-active" type="button">Snap On</button>
-            </div>
-            <div class="action-group">
-              <button id="zoom-out" class="chip" type="button">-</button>
-              <button id="zoom-reset" class="chip" type="button">100%</button>
-              <button id="zoom-in" class="chip" type="button">+</button>
-            </div>
-            <button id="toggle-ui" class="chip" type="button">Toggle UI</button>
-            <button id="toggle-drawer" class="chip" type="button">Panels</button>
-            <button id="help-btn" class="chip help-chip" type="button" aria-label="Help">?</button>
             <div class="toolbar mode-toolbar" id="toolbar" aria-label="Mode selection">
               <div class="mode-row">
                 <button id="mode-cursor" class="tool-button is-active" data-mode="cursor" type="button" data-tooltip="Cursor - Pan" aria-label="Cursor">
@@ -118,21 +128,10 @@
                 </button>
               </div>
               <div class="toolbar-footer">
-                <button id="grid-size" class="toolbar-chip" type="button">50 x 50</button>
                 <div class="toolbar-chip is-static">Tile 40px</div>
-              </div>
-              <div class="grid-size-popover is-hidden" id="grid-size-popover" role="dialog" aria-label="Grid size">
-                <div class="grid-size-field">
-                  <label for="grid-rows">Rows</label>
-                  <input id="grid-rows" type="number" min="5" max="200" value="50" />
-                </div>
-                <div class="grid-size-field">
-                  <label for="grid-cols">Columns</label>
-                  <input id="grid-cols" type="number" min="5" max="200" value="50" />
-                </div>
-                <div class="grid-size-actions">
-                  <button id="grid-apply" class="chip" type="button">Apply</button>
-                  <button id="grid-cancel" class="chip" type="button">Cancel</button>
+                <div class="toolbar-rotation">
+                  <span>Rotation</span>
+                  <button id="rotate-btn" class="chip" type="button">North</button>
                 </div>
               </div>
             </div>
@@ -149,20 +148,6 @@
             <div id="door-layer"></div>
             <div id="preview-layer"></div>
             <div id="room-preview" class="room-preview"></div>
-          </div>
-        </div>
-
-        <div class="canvas-footer">
-          <div class="footer-left">
-            <div id="mode-indicator">Mode: Cursor</div>
-            <div class="canvas-tip">Tip: switch tools to edit, use cursor to pan.</div>
-          </div>
-          <div class="footer-right">
-            <div class="status-chip" id="status-grid">Grid: 50 x 50</div>
-            <div class="status-chip" id="status-zoom">Zoom: 100%</div>
-            <div class="minimap">
-              <canvas id="minimap" width="120" height="120"></canvas>
-            </div>
           </div>
         </div>
       </section>
@@ -184,86 +169,118 @@
           </div>
           <div class="panel-body">
             <div class="palette-grid">
-            <button class="palette-item" data-material="asphalt" type="button">
-              <span class="swatch"></span>
-              <span class="label">Asphalt</span>
-            </button>
-            <button class="palette-item" data-material="bathroom" type="button">
-              <span class="swatch"></span>
-              <span class="label">Bathroom</span>
-            </button>
-            <button class="palette-item" data-material="brick" type="button">
-              <span class="swatch"></span>
-              <span class="label">Brick</span>
-            </button>
-            <button class="palette-item" data-material="carpet" type="button">
-              <span class="swatch"></span>
-              <span class="label">Carpet: Tile</span>
-            </button>
-            <button class="palette-item" data-material="concrete" type="button">
-              <span class="swatch"></span>
-              <span class="label">Concrete</span>
-            </button>
-            <button class="palette-item" data-material="dirt" type="button">
-              <span class="swatch"></span>
-              <span class="label">Dirt</span>
-            </button>
-            <button class="palette-item" data-material="dryGrass" type="button">
-              <span class="swatch"></span>
-              <span class="label">Grass: Dry</span>
-            </button>
-            <button class="palette-item" data-material="lushGrass" type="button">
-              <span class="swatch"></span>
-              <span class="label">Grass: Lush</span>
-            </button>
-            <button class="palette-item" data-material="grass" type="button">
-              <span class="swatch"></span>
-              <span class="label">Grass: Manicured</span>
-            </button>
-            <button class="palette-item" data-material="tallGrass" type="button">
-              <span class="swatch"></span>
-              <span class="label">Grass: Tall</span>
-            </button>
-            <button class="palette-item" data-material="hay" type="button">
-              <span class="swatch"></span>
-              <span class="label">Hay</span>
-            </button>
-            <button class="palette-item" data-material="kitchen" type="button">
-              <span class="swatch"></span>
-              <span class="label">Kitchen</span>
-            </button>
-            <button class="palette-item" data-material="medical" type="button">
-              <span class="swatch"></span>
-              <span class="label">Medical</span>
-            </button>
-            <button class="palette-item" data-material="parkingLot" type="button">
-              <span class="swatch"></span>
-              <span class="label">Parking Lot</span>
-            </button>
-            <button class="palette-item is-active" data-material="sand" type="button">
-              <span class="swatch"></span>
-              <span class="label">Sand</span>
-            </button>
-            <button class="palette-item" data-material="concreteBlock" type="button">
-              <span class="swatch"></span>
-              <span class="label">Sidewalk</span>
-            </button>
-            <button class="palette-item" data-material="checkerTile" type="button">
-              <span class="swatch"></span>
-              <span class="label">Tile: Checker</span>
-            </button>
-            <button class="palette-item" data-material="water" type="button">
-              <span class="swatch"></span>
-              <span class="label">Water</span>
-            </button>
-            <button class="palette-item" data-material="wood" type="button">
-              <span class="swatch"></span>
-              <span class="label">Wood: Basic</span>
-            </button>
-            <button class="palette-item" data-material="woodPlank" type="button">
-              <span class="swatch"></span>
-              <span class="label">Wood: Plank</span>
-            </button>
+              <button class="palette-item" data-material="asphalt" type="button">
+                <span class="swatch"></span>
+                <span class="label">Asphalt</span>
+              </button>
+              <button class="palette-item" data-material="bathroom" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bathroom</span>
+              </button>
+              <button class="palette-item" data-material="brick" type="button">
+                <span class="swatch"></span>
+                <span class="label">Brick</span>
+              </button>
+              <button class="palette-item" data-material="carpet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Carpet: Tile</span>
+              </button>
+              <button class="palette-item" data-material="cobblestone" type="button">
+                <span class="swatch"></span>
+                <span class="label">Cobblestone</span>
+              </button>
+              <button class="palette-item" data-material="concrete" type="button">
+                <span class="swatch"></span>
+                <span class="label">Concrete</span>
+              </button>
+              <button class="palette-item" data-material="concreteCracked" type="button">
+                <span class="swatch"></span>
+                <span class="label">Concrete: Cracked</span>
+              </button>
+              <button class="palette-item" data-material="dirt" type="button">
+                <span class="swatch"></span>
+                <span class="label">Dirt</span>
+              </button>
+              <button class="palette-item" data-material="dryGrass" type="button">
+                <span class="swatch"></span>
+                <span class="label">Grass: Dry</span>
+              </button>
+              <button class="palette-item" data-material="lushGrass" type="button">
+                <span class="swatch"></span>
+                <span class="label">Grass: Lush</span>
+              </button>
+              <button class="palette-item" data-material="grass" type="button">
+                <span class="swatch"></span>
+                <span class="label">Grass: Manicured</span>
+              </button>
+              <button class="palette-item" data-material="tallGrass" type="button">
+                <span class="swatch"></span>
+                <span class="label">Grass: Tall</span>
+              </button>
+              <button class="palette-item" data-material="gravel" type="button">
+                <span class="swatch"></span>
+                <span class="label">Gravel</span>
+              </button>
+              <button class="palette-item" data-material="hay" type="button">
+                <span class="swatch"></span>
+                <span class="label">Hay</span>
+              </button>
+              <button class="palette-item" data-material="kitchen" type="button">
+                <span class="swatch"></span>
+                <span class="label">Kitchen</span>
+              </button>
+              <button class="palette-item" data-material="leafLitter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Leaf Litter</span>
+              </button>
+              <button class="palette-item" data-material="medical" type="button">
+                <span class="swatch"></span>
+                <span class="label">Medical</span>
+              </button>
+              <button class="palette-item" data-material="mud" type="button">
+                <span class="swatch"></span>
+                <span class="label">Mud</span>
+              </button>
+              <button class="palette-item" data-material="parkingLot" type="button">
+                <span class="swatch"></span>
+                <span class="label">Parking Lot</span>
+              </button>
+              <button class="palette-item is-active" data-material="sand" type="button">
+                <span class="swatch"></span>
+                <span class="label">Sand</span>
+              </button>
+              <button class="palette-item" data-material="concreteBlock" type="button">
+                <span class="swatch"></span>
+                <span class="label">Sidewalk</span>
+              </button>
+              <button class="palette-item" data-material="checkerTile" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Checker</span>
+              </button>
+              <button class="palette-item" data-material="tileSlate" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Slate</span>
+              </button>
+              <button class="palette-item" data-material="tileTerracotta" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Terracotta</span>
+              </button>
+              <button class="palette-item" data-material="water" type="button">
+                <span class="swatch"></span>
+                <span class="label">Water</span>
+              </button>
+              <button class="palette-item" data-material="wood" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood: Basic</span>
+              </button>
+              <button class="palette-item" data-material="woodParquet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood: Parquet</span>
+              </button>
+              <button class="palette-item" data-material="woodPlank" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood: Plank</span>
+              </button>
             </div>
           </div>
         </div>
@@ -318,9 +335,17 @@
                 <span class="swatch"></span>
                 <span class="label">Carpet: Tile</span>
               </button>
+              <button class="palette-item" data-blend-material="cobblestone" type="button">
+                <span class="swatch"></span>
+                <span class="label">Cobblestone</span>
+              </button>
               <button class="palette-item" data-blend-material="concrete" type="button">
                 <span class="swatch"></span>
                 <span class="label">Concrete</span>
+              </button>
+              <button class="palette-item" data-blend-material="concreteCracked" type="button">
+                <span class="swatch"></span>
+                <span class="label">Concrete: Cracked</span>
               </button>
               <button class="palette-item" data-blend-material="dirt" type="button">
                 <span class="swatch"></span>
@@ -342,6 +367,10 @@
                 <span class="swatch"></span>
                 <span class="label">Grass: Tall</span>
               </button>
+              <button class="palette-item" data-blend-material="gravel" type="button">
+                <span class="swatch"></span>
+                <span class="label">Gravel</span>
+              </button>
               <button class="palette-item" data-blend-material="hay" type="button">
                 <span class="swatch"></span>
                 <span class="label">Hay</span>
@@ -350,9 +379,17 @@
                 <span class="swatch"></span>
                 <span class="label">Kitchen</span>
               </button>
+              <button class="palette-item" data-blend-material="leafLitter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Leaf Litter</span>
+              </button>
               <button class="palette-item" data-blend-material="medical" type="button">
                 <span class="swatch"></span>
                 <span class="label">Medical</span>
+              </button>
+              <button class="palette-item" data-blend-material="mud" type="button">
+                <span class="swatch"></span>
+                <span class="label">Mud</span>
               </button>
               <button class="palette-item" data-blend-material="parkingLot" type="button">
                 <span class="swatch"></span>
@@ -370,6 +407,14 @@
                 <span class="swatch"></span>
                 <span class="label">Tile: Checker</span>
               </button>
+              <button class="palette-item" data-blend-material="tileSlate" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Slate</span>
+              </button>
+              <button class="palette-item" data-blend-material="tileTerracotta" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Terracotta</span>
+              </button>
               <button class="palette-item" data-blend-material="water" type="button">
                 <span class="swatch"></span>
                 <span class="label">Water</span>
@@ -377,6 +422,10 @@
               <button class="palette-item" data-blend-material="wood" type="button">
                 <span class="swatch"></span>
                 <span class="label">Wood: Basic</span>
+              </button>
+              <button class="palette-item" data-blend-material="woodParquet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood: Parquet</span>
               </button>
               <button class="palette-item" data-blend-material="woodPlank" type="button">
                 <span class="swatch"></span>
@@ -420,26 +469,46 @@
           </div>
           <div class="panel-body">
             <div class="palette-grid">
-            <button class="palette-item" data-wall="logWall" type="button">
-              <span class="swatch"></span>
-              <span class="label">Log Wall</span>
-            </button>
-            <button class="palette-item" data-wall="picketFence" type="button">
-              <span class="swatch"></span>
-              <span class="label">Picket Fence</span>
-            </button>
-            <button class="palette-item is-active" data-wall="standard" type="button">
-              <span class="swatch"></span>
-              <span class="label">Standard</span>
-            </button>
-            <button class="palette-item" data-wall="stallWall" type="button">
-              <span class="swatch"></span>
-              <span class="label">Stall Wall</span>
-            </button>
-            <button class="palette-item" data-wall="woodenFence" type="button">
-              <span class="swatch"></span>
-              <span class="label">Wood Fence</span>
-            </button>
+              <button class="palette-item" data-wall="brickWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Brick Wall</span>
+              </button>
+              <button class="palette-item" data-wall="chainLinkFence" type="button">
+                <span class="swatch"></span>
+                <span class="label">Chain Link Fence</span>
+              </button>
+              <button class="palette-item" data-wall="concreteWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Concrete Wall</span>
+              </button>
+              <button class="palette-item" data-wall="logWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Log Wall</span>
+              </button>
+              <button class="palette-item" data-wall="metalWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Metal Wall</span>
+              </button>
+              <button class="palette-item" data-wall="picketFence" type="button">
+                <span class="swatch"></span>
+                <span class="label">Picket Fence</span>
+              </button>
+              <button class="palette-item" data-wall="plasterWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Plaster Wall</span>
+              </button>
+              <button class="palette-item" data-wall="stallWall" type="button">
+                <span class="swatch"></span>
+                <span class="label">Stall Wall</span>
+              </button>
+              <button class="palette-item is-active" data-wall="standard" type="button">
+                <span class="swatch"></span>
+                <span class="label">Standard Wall</span>
+              </button>
+              <button class="palette-item" data-wall="woodenFence" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood Fence</span>
+              </button>
             </div>
           </div>
         </div>
@@ -451,22 +520,38 @@
           </div>
           <div class="panel-body">
             <div class="palette-grid">
-            <button class="palette-item" data-door="fenceGate" type="button">
-              <span class="swatch"></span>
-              <span class="label">Fence Gate</span>
-            </button>
-            <button class="palette-item" data-door="logGate" type="button">
-              <span class="swatch"></span>
-              <span class="label">Log Gate</span>
-            </button>
-            <button class="palette-item is-active" data-door="standard" type="button">
-              <span class="swatch"></span>
-              <span class="label">Standard</span>
-            </button>
-            <button class="palette-item" data-door="stallDoor" type="button">
-              <span class="swatch"></span>
-              <span class="label">Stall Door</span>
-            </button>
+              <button class="palette-item" data-door="chainGate" type="button">
+                <span class="swatch"></span>
+                <span class="label">Chain Gate</span>
+              </button>
+              <button class="palette-item" data-door="fenceGate" type="button">
+                <span class="swatch"></span>
+                <span class="label">Fence Gate</span>
+              </button>
+              <button class="palette-item" data-door="garageDoor" type="button">
+                <span class="swatch"></span>
+                <span class="label">Garage Door</span>
+              </button>
+              <button class="palette-item" data-door="glassDoor" type="button">
+                <span class="swatch"></span>
+                <span class="label">Glass Door</span>
+              </button>
+              <button class="palette-item" data-door="logGate" type="button">
+                <span class="swatch"></span>
+                <span class="label">Log Gate</span>
+              </button>
+              <button class="palette-item" data-door="metalDoor" type="button">
+                <span class="swatch"></span>
+                <span class="label">Metal Door</span>
+              </button>
+              <button class="palette-item" data-door="stallDoor" type="button">
+                <span class="swatch"></span>
+                <span class="label">Stall Door</span>
+              </button>
+              <button class="palette-item is-active" data-door="standard" type="button">
+                <span class="swatch"></span>
+                <span class="label">Standard Door</span>
+              </button>
             </div>
           </div>
         </div>
@@ -478,134 +563,226 @@
           </div>
           <div class="panel-body">
             <div class="palette-grid furniture-grid">
-            <button class="palette-item" data-furniture="bathroomCounter" type="button">
-              <span class="swatch"></span>
-              <span class="label">Bathroom Counter</span>
-            </button>
-            <button class="palette-item" data-furniture="bathroomSink" type="button">
-              <span class="swatch"></span>
-              <span class="label">Bathroom Sink</span>
-            </button>
-            <button class="palette-item is-active" data-furniture="bed" type="button">
-              <span class="swatch"></span>
-              <span class="label">Bed</span>
-            </button>
-            <button class="palette-item" data-furniture="chair" type="button">
-              <span class="swatch"></span>
-              <span class="label">Chair</span>
-            </button>
-            <button class="palette-item" data-furniture="computer" type="button">
-              <span class="swatch"></span>
-              <span class="label">CRT Computer</span>
-            </button>
-            <button class="palette-item" data-furniture="desk" type="button">
-              <span class="swatch"></span>
-              <span class="label">Desk</span>
-            </button>
-            <button class="palette-item" data-furniture="deskChair" type="button">
-              <span class="swatch"></span>
-              <span class="label">Desk Chair</span>
-            </button>
-            <button class="palette-item" data-furniture="dryer" type="button">
-              <span class="swatch"></span>
-              <span class="label">Dryer</span>
-            </button>
-            <button class="palette-item" data-furniture="fileCabinet" type="button">
-              <span class="swatch"></span>
-              <span class="label">File Cabinet</span>
-            </button>
-            <button class="palette-item" data-furniture="ivStand" type="button">
-              <span class="swatch"></span>
-              <span class="label">IV Stand</span>
-            </button>
-            <button class="palette-item" data-furniture="jukebox" type="button">
-              <span class="swatch"></span>
-              <span class="label">Jukebox</span>
-            </button>
-            <button class="palette-item" data-furniture="largeFridge" type="button">
-              <span class="swatch"></span>
-              <span class="label">Large Fridge</span>
-            </button>
-            <button class="palette-item" data-furniture="medicalBed" type="button">
-              <span class="swatch"></span>
-              <span class="label">Medical Bed</span>
-            </button>
-            <button class="palette-item" data-furniture="medicalCounter" type="button">
-              <span class="swatch"></span>
-              <span class="label">Medical Counter</span>
-            </button>
-            <button class="palette-item" data-furniture="medicalTray" type="button">
-              <span class="swatch"></span>
-              <span class="label">Medical Tray</span>
-            </button>
-            <button class="palette-item" data-furniture="miniFridge" type="button">
-              <span class="swatch"></span>
-              <span class="label">Mini Fridge</span>
-            </button>
-            <button class="palette-item" data-furniture="oldOven" type="button">
-              <span class="swatch"></span>
-              <span class="label">Old Oven</span>
-            </button>
-            <button class="palette-item" data-furniture="shelf" type="button">
-              <span class="swatch"></span>
-              <span class="label">Open Shelf</span>
-            </button>
-            <button class="palette-item" data-furniture="poolTable" type="button">
-              <span class="swatch"></span>
-              <span class="label">Pool Table</span>
-            </button>
-            <button class="palette-item" data-furniture="schoolLockers" type="button">
-              <span class="swatch"></span>
-              <span class="label">School Lockers</span>
-            </button>
-            <button class="palette-item" data-furniture="shower" type="button">
-              <span class="swatch"></span>
-              <span class="label">Shower</span>
-            </button>
-            <button class="palette-item" data-furniture="sink" type="button">
-              <span class="swatch"></span>
-              <span class="label">Sink</span>
-            </button>
-            <button class="palette-item" data-furniture="steelCounter" type="button">
-              <span class="swatch"></span>
-              <span class="label">Steel Counter</span>
-            </button>
-            <button class="palette-item" data-furniture="storageBox" type="button">
-              <span class="swatch"></span>
-              <span class="label">Storage Box</span>
-            </button>
-            <button class="palette-item" data-furniture="stove" type="button">
-              <span class="swatch"></span>
-              <span class="label">Stove</span>
-            </button>
-            <button class="palette-item" data-furniture="toilet" type="button">
-              <span class="swatch"></span>
-              <span class="label">Toilet</span>
-            </button>
-            <button class="palette-item" data-furniture="trashcan" type="button">
-              <span class="swatch"></span>
-              <span class="label">Trash Can</span>
-            </button>
-            <button class="palette-item" data-furniture="wallShelf" type="button">
-              <span class="swatch"></span>
-              <span class="label">Wall Shelf</span>
-            </button>
-            <button class="palette-item" data-furniture="waterBarrel" type="button">
-              <span class="swatch"></span>
-              <span class="label">Water Barrel</span>
-            </button>
-            <button class="palette-item" data-furniture="waterTank" type="button">
-              <span class="swatch"></span>
-              <span class="label">Water Cooler</span>
-            </button>
-            <button class="palette-item" data-furniture="washer" type="button">
-              <span class="swatch"></span>
-              <span class="label">Washer</span>
-            </button>
-            <button class="palette-item" data-furniture="woodCounter" type="button">
-              <span class="swatch"></span>
-              <span class="label">Wood Counter</span>
-            </button>
+              <button class="palette-item" data-furniture="arcadeMachine" type="button">
+                <span class="swatch"></span>
+                <span class="label">Arcade Machine</span>
+              </button>
+              <button class="palette-item" data-furniture="armchair" type="button">
+                <span class="swatch"></span>
+                <span class="label">Armchair</span>
+              </button>
+              <button class="palette-item" data-furniture="bathroomCounter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bathroom Counter</span>
+              </button>
+              <button class="palette-item" data-furniture="bathroomSink" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bathroom Sink</span>
+              </button>
+              <button class="palette-item" data-furniture="bathtub" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bathtub</span>
+              </button>
+              <button class="palette-item is-active" data-furniture="bed" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bed</span>
+              </button>
+              <button class="palette-item" data-furniture="bookcase" type="button">
+                <span class="swatch"></span>
+                <span class="label">Bookcase</span>
+              </button>
+              <button class="palette-item" data-furniture="chair" type="button">
+                <span class="swatch"></span>
+                <span class="label">Chair</span>
+              </button>
+              <button class="palette-item" data-furniture="coffeeTable" type="button">
+                <span class="swatch"></span>
+                <span class="label">Coffee Table</span>
+              </button>
+              <button class="palette-item" data-furniture="computer" type="button">
+                <span class="swatch"></span>
+                <span class="label">CRT Computer</span>
+              </button>
+              <button class="palette-item" data-furniture="desk" type="button">
+                <span class="swatch"></span>
+                <span class="label">Desk</span>
+              </button>
+              <button class="palette-item" data-furniture="deskChair" type="button">
+                <span class="swatch"></span>
+                <span class="label">Desk Chair</span>
+              </button>
+              <button class="palette-item" data-furniture="diningTable" type="button">
+                <span class="swatch"></span>
+                <span class="label">Dining Table</span>
+              </button>
+              <button class="palette-item" data-furniture="dishwasher" type="button">
+                <span class="swatch"></span>
+                <span class="label">Dishwasher</span>
+              </button>
+              <button class="palette-item" data-furniture="dresser" type="button">
+                <span class="swatch"></span>
+                <span class="label">Dresser</span>
+              </button>
+              <button class="palette-item" data-furniture="dryer" type="button">
+                <span class="swatch"></span>
+                <span class="label">Dryer</span>
+              </button>
+              <button class="palette-item" data-furniture="fileCabinet" type="button">
+                <span class="swatch"></span>
+                <span class="label">File Cabinet</span>
+              </button>
+              <button class="palette-item" data-furniture="freezer" type="button">
+                <span class="swatch"></span>
+                <span class="label">Freezer</span>
+              </button>
+              <button class="palette-item" data-furniture="generator" type="button">
+                <span class="swatch"></span>
+                <span class="label">Generator</span>
+              </button>
+              <button class="palette-item" data-furniture="gurney" type="button">
+                <span class="swatch"></span>
+                <span class="label">Gurney</span>
+              </button>
+              <button class="palette-item" data-furniture="ivStand" type="button">
+                <span class="swatch"></span>
+                <span class="label">IV Stand</span>
+              </button>
+              <button class="palette-item" data-furniture="jukebox" type="button">
+                <span class="swatch"></span>
+                <span class="label">Jukebox</span>
+              </button>
+              <button class="palette-item" data-furniture="kitchenIsland" type="button">
+                <span class="swatch"></span>
+                <span class="label">Kitchen Island</span>
+              </button>
+              <button class="palette-item" data-furniture="kitchenTable" type="button">
+                <span class="swatch"></span>
+                <span class="label">Kitchen Table</span>
+              </button>
+              <button class="palette-item" data-furniture="largeFridge" type="button">
+                <span class="swatch"></span>
+                <span class="label">Large Fridge</span>
+              </button>
+              <button class="palette-item" data-furniture="medicalBed" type="button">
+                <span class="swatch"></span>
+                <span class="label">Medical Bed</span>
+              </button>
+              <button class="palette-item" data-furniture="medCabinet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Medical Cabinet</span>
+              </button>
+              <button class="palette-item" data-furniture="medicalCounter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Medical Counter</span>
+              </button>
+              <button class="palette-item" data-furniture="medicalTray" type="button">
+                <span class="swatch"></span>
+                <span class="label">Medical Tray</span>
+              </button>
+              <button class="palette-item" data-furniture="metalShelf" type="button">
+                <span class="swatch"></span>
+                <span class="label">Metal Shelf</span>
+              </button>
+              <button class="palette-item" data-furniture="microwave" type="button">
+                <span class="swatch"></span>
+                <span class="label">Microwave</span>
+              </button>
+              <button class="palette-item" data-furniture="miniFridge" type="button">
+                <span class="swatch"></span>
+                <span class="label">Mini Fridge</span>
+              </button>
+              <button class="palette-item" data-furniture="nightstand" type="button">
+                <span class="swatch"></span>
+                <span class="label">Nightstand</span>
+              </button>
+              <button class="palette-item" data-furniture="officeTable" type="button">
+                <span class="swatch"></span>
+                <span class="label">Office Table</span>
+              </button>
+              <button class="palette-item" data-furniture="oldOven" type="button">
+                <span class="swatch"></span>
+                <span class="label">Old Oven</span>
+              </button>
+              <button class="palette-item" data-furniture="shelf" type="button">
+                <span class="swatch"></span>
+                <span class="label">Open Shelf</span>
+              </button>
+              <button class="palette-item" data-furniture="poolTable" type="button">
+                <span class="swatch"></span>
+                <span class="label">Pool Table</span>
+              </button>
+              <button class="palette-item" data-furniture="schoolLockers" type="button">
+                <span class="swatch"></span>
+                <span class="label">School Lockers</span>
+              </button>
+              <button class="palette-item" data-furniture="shower" type="button">
+                <span class="swatch"></span>
+                <span class="label">Shower</span>
+              </button>
+              <button class="palette-item" data-furniture="sink" type="button">
+                <span class="swatch"></span>
+                <span class="label">Sink</span>
+              </button>
+              <button class="palette-item" data-furniture="steelCounter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Steel Counter</span>
+              </button>
+              <button class="palette-item" data-furniture="storageBox" type="button">
+                <span class="swatch"></span>
+                <span class="label">Storage Box</span>
+              </button>
+              <button class="palette-item" data-furniture="stove" type="button">
+                <span class="swatch"></span>
+                <span class="label">Stove</span>
+              </button>
+              <button class="palette-item" data-furniture="toilet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Toilet</span>
+              </button>
+              <button class="palette-item" data-furniture="toolCabinet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tool Cabinet</span>
+              </button>
+              <button class="palette-item" data-furniture="towelRack" type="button">
+                <span class="swatch"></span>
+                <span class="label">Towel Rack</span>
+              </button>
+              <button class="palette-item" data-furniture="trashcan" type="button">
+                <span class="swatch"></span>
+                <span class="label">Trash Can</span>
+              </button>
+              <button class="palette-item" data-furniture="tvStand" type="button">
+                <span class="swatch"></span>
+                <span class="label">TV Stand</span>
+              </button>
+              <button class="palette-item" data-furniture="wallShelf" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wall Shelf</span>
+              </button>
+              <button class="palette-item" data-furniture="washer" type="button">
+                <span class="swatch"></span>
+                <span class="label">Washing Machine</span>
+              </button>
+              <button class="palette-item" data-furniture="wardrobe" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wardrobe</span>
+              </button>
+              <button class="palette-item" data-furniture="waterBarrel" type="button">
+                <span class="swatch"></span>
+                <span class="label">Water Barrel</span>
+              </button>
+              <button class="palette-item" data-furniture="waterTank" type="button">
+                <span class="swatch"></span>
+                <span class="label">Water Cooler</span>
+              </button>
+              <button class="palette-item" data-furniture="whiteboard" type="button">
+                <span class="swatch"></span>
+                <span class="label">Whiteboard</span>
+              </button>
+              <button class="palette-item" data-furniture="woodCounter" type="button">
+                <span class="swatch"></span>
+                <span class="label">Wood Counter</span>
+              </button>
             </div>
           </div>
         </div>
@@ -635,7 +812,7 @@
               </div>
               <div class="property-item">
                 <span class="property-label">Grid</span>
-                <span class="property-value" id="property-grid">50 x 50</span>
+                <span class="property-value" id="property-grid">20 x 20</span>
               </div>
               <div class="property-item">
                 <span class="property-label">Zoom</span>
@@ -647,6 +824,37 @@
         </div>
       </aside>
     </main>
+
+    <div class="status-dock" id="status-dock" aria-label="Status">
+      <div class="status-stack">
+        <div class="status-chip" id="status-grid">Grid: 20 x 20</div>
+        <div class="action-group zoom-controls" role="group" aria-label="Zoom">
+          <button id="zoom-out" class="chip" type="button">-</button>
+          <button id="zoom-reset" class="chip" type="button">100%</button>
+          <button id="zoom-in" class="chip" type="button">+</button>
+        </div>
+      </div>
+      <div class="minimap">
+        <canvas id="minimap" width="120" height="120"></canvas>
+      </div>
+    </div>
+
+    <div class="options-dock" id="options-dock" aria-label="Options">
+      <button id="options-btn" class="options-btn" type="button">Options</button>
+      <div class="options-popover is-hidden" id="options-popover" role="dialog" aria-label="Options menu">
+        <div class="options-group">
+          <button id="toggle-grid" class="chip is-active" type="button">Grid On</button>
+          <button id="toggle-snap" class="chip is-active" type="button">Snap On</button>
+        </div>
+        <div class="options-group">
+          <button id="toggle-ui" class="chip" type="button">Toggle UI</button>
+          <button id="toggle-drawer" class="chip" type="button">Panels</button>
+        </div>
+        <div class="options-group">
+          <button id="reset-btn" class="chip danger" type="button">Reset</button>
+        </div>
+      </div>
+    </div>
 
     <div class="tool-drawer" id="tool-drawer" aria-label="Tool drawer">
       <div class="drawer-bar">
