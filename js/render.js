@@ -1,6 +1,6 @@
 import { MATERIALS, WALL_TYPES, DOOR_TYPES, FURNITURE } from "./catalog.js";
 import { createFurnitureIcon } from "./furniture-icons.js";
-import { selectedFurnitureId } from "./state.js";
+import { selectedFurnitureId, gridRows, gridCols } from "./state.js";
 import { dirToRotation, findWallAttachment, rotationToDir } from "./wall-utils.js";
 
 const TILE = 40;
@@ -16,6 +16,8 @@ const PATTERN_SIZES = {
   dryGrass: 200,
   lushGrass: 200,
   tallGrass: 200,
+  carpet: 180,
+  checkerTile: TILE,
   concrete: 200,
   wood: 200,
   woodPlank: 200,
@@ -173,6 +175,8 @@ export function renderBlueprint(data) {
   for (const item of sortedFurniture) {
     addFurniture(furnitureLayer, item, wallSet, baseMounts);
   }
+
+  updateMinimap(data);
 }
 
 function getFurnitureLayer(item) {
@@ -205,7 +209,7 @@ function addFloor(layer, item, floorMap, wallSet, doorSet) {
   el.style.top = `${item.row * TILE}px`;
   el.style.width = `${TILE}px`;
   el.style.height = `${TILE}px`;
-  applyFloorTexture(el, floorMaterial, item.row, item.col);
+  applyFloorTexture(el, floorMaterial, item.row, item.col, item.tint);
 
   if (item.blend) {
     applyFloorBlend(el, item, floorMap, wallSet, doorSet);
@@ -221,12 +225,26 @@ function applyFloorBlend(el, item, floorMap, wallSet, doorSet) {
 
   if (blend.mode === "diag") {
     const corner = blend.variant === "backslash" ? "tr" : "tl";
-    addTriangleOverlay(el, blend.secondary, item.row, item.col, corner);
+    addTriangleOverlay(
+      el,
+      blend.secondary,
+      item.row,
+      item.col,
+      corner,
+      blend.secondaryTint
+    );
     return;
   }
 
   if (blend.mode === "quarter") {
-    addQuarterOverlay(el, blend.secondary, item.row, item.col, blend.corner);
+    addQuarterOverlay(
+      el,
+      blend.secondary,
+      item.row,
+      item.col,
+      blend.corner,
+      blend.secondaryTint
+    );
     return;
   }
 
@@ -240,35 +258,42 @@ function applyFloorBlend(el, item, floorMap, wallSet, doorSet) {
       doorSet
     );
     if (corner) {
-      addTriangleOverlay(el, blend.secondary, item.row, item.col, corner);
+      addTriangleOverlay(
+        el,
+        blend.secondary,
+        item.row,
+        item.col,
+        corner,
+        blend.secondaryTint
+      );
     }
   }
 }
 
-function addTriangleOverlay(el, material, row, col, corner) {
+function addTriangleOverlay(el, material, row, col, corner, tint) {
   const clipPath = triangleClipPath(corner);
   if (!clipPath) return;
-  addBlendOverlay(el, material, row, col, clipPath);
+  addBlendOverlay(el, material, row, col, clipPath, tint);
 }
 
-function addQuarterOverlay(el, material, row, col, corner) {
+function addQuarterOverlay(el, material, row, col, corner, tint) {
   const clipPath = quarterClipPath(corner);
   if (!clipPath) return;
-  addBlendOverlay(el, material, row, col, clipPath);
+  addBlendOverlay(el, material, row, col, clipPath, tint);
 }
 
-function addBlendOverlay(el, material, row, col, clipPath) {
+function addBlendOverlay(el, material, row, col, clipPath, tint) {
   const overlay = document.createElement("div");
   overlay.style.position = "absolute";
   overlay.style.inset = "0";
   overlay.style.pointerEvents = "none";
-  applyFloorTexture(overlay, material, row, col);
+  applyFloorTexture(overlay, material, row, col, tint);
   overlay.style.clipPath = clipPath;
   el.appendChild(overlay);
 }
 
-function applyFloorTexture(el, material, row, col) {
-  const pattern = getFloorTexture(material);
+function applyFloorTexture(el, material, row, col, tint) {
+  const pattern = getFloorTexture(material, tint);
   el.style.backgroundImage = `url(${pattern.texture})`;
   el.style.backgroundSize = `${pattern.size}px ${pattern.size}px`;
   el.style.backgroundPosition = `${-col * TILE}px ${-row * TILE}px`;
@@ -590,22 +615,138 @@ function addDoor(layer, row, col, dir, doorType = "standard") {
   layer.appendChild(door);
 }
 
-function getFloorTexture(material) {
+function updateMinimap(data) {
+  const canvas = document.getElementById("minimap");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = canvas.width;
+  const height = canvas.height;
+  const cols = Math.max(1, gridCols);
+  const rows = Math.max(1, gridRows);
+  const scaleX = width / cols;
+  const scaleY = height / rows;
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#0f141b";
+  ctx.fillRect(0, 0, width, height);
+
+  const floorSizeX = Math.max(1, Math.ceil(scaleX));
+  const floorSizeY = Math.max(1, Math.ceil(scaleY));
+
+  for (const item of data) {
+    if (item.type !== "floor") continue;
+    const color =
+      item.tint ??
+      MATERIALS[item.material]?.color ??
+      MATERIALS.sand.color;
+    ctx.fillStyle = color;
+    ctx.fillRect(
+      Math.floor(item.col * scaleX),
+      Math.floor(item.row * scaleY),
+      floorSizeX,
+      floorSizeY
+    );
+  }
+
+  ctx.lineWidth = 1;
+  for (const item of data) {
+    if (item.type !== "wall") continue;
+    const color = WALL_TYPES[item.wallType]?.color ?? WALL_TYPES.standard.color;
+    ctx.strokeStyle = color;
+    const x = item.col * scaleX;
+    const y = item.row * scaleY;
+    if (item.dir === "n") {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + scaleX, y);
+      ctx.stroke();
+    } else if (item.dir === "s") {
+      ctx.beginPath();
+      ctx.moveTo(x, y + scaleY);
+      ctx.lineTo(x + scaleX, y + scaleY);
+      ctx.stroke();
+    } else if (item.dir === "w") {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + scaleY);
+      ctx.stroke();
+    } else if (item.dir === "e") {
+      ctx.beginPath();
+      ctx.moveTo(x + scaleX, y);
+      ctx.lineTo(x + scaleX, y + scaleY);
+      ctx.stroke();
+    }
+  }
+
+  for (const item of data) {
+    if (item.type !== "door") continue;
+    const color = DOOR_TYPES[item.doorType]?.color ?? DOOR_TYPES.standard.color;
+    ctx.strokeStyle = color;
+    const x = item.col * scaleX;
+    const y = item.row * scaleY;
+    const span = 0.6;
+    if (item.dir === "n") {
+      ctx.beginPath();
+      ctx.moveTo(x + scaleX * 0.2, y);
+      ctx.lineTo(x + scaleX * (0.2 + span), y);
+      ctx.stroke();
+    } else if (item.dir === "s") {
+      ctx.beginPath();
+      ctx.moveTo(x + scaleX * 0.2, y + scaleY);
+      ctx.lineTo(x + scaleX * (0.2 + span), y + scaleY);
+      ctx.stroke();
+    } else if (item.dir === "w") {
+      ctx.beginPath();
+      ctx.moveTo(x, y + scaleY * 0.2);
+      ctx.lineTo(x, y + scaleY * (0.2 + span));
+      ctx.stroke();
+    } else if (item.dir === "e") {
+      ctx.beginPath();
+      ctx.moveTo(x + scaleX, y + scaleY * 0.2);
+      ctx.lineTo(x + scaleX, y + scaleY * (0.2 + span));
+      ctx.stroke();
+    }
+  }
+
+  for (const item of data) {
+    if (item.type !== "furniture") continue;
+    const config = FURNITURE[item.kind];
+    if (!config) continue;
+    const color = config.color;
+    const widthTiles = config.size?.[0] ?? 1;
+    const heightTiles = config.size?.[1] ?? 1;
+    ctx.fillStyle = color;
+    ctx.fillRect(
+      Math.floor(item.col * scaleX),
+      Math.floor(item.row * scaleY),
+      Math.max(1, Math.ceil(widthTiles * scaleX)),
+      Math.max(1, Math.ceil(heightTiles * scaleY))
+    );
+  }
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+  ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+}
+
+function getFloorTexture(material, tint) {
   const size = PATTERN_SIZES[material] ?? 200;
-  const cached = textureCache.get(material);
+  const cacheKey = tint ? `${material}:${tint}` : material;
+  const cached = textureCache.get(cacheKey);
   if (cached && cached.size === size) return cached;
-  const texture = createFloorTexture(material, size);
+  const texture = createFloorTexture(material, size, tint);
   const payload = { texture, size };
-  textureCache.set(material, payload);
+  textureCache.set(cacheKey, payload);
   return payload;
 }
 
-function createFloorTexture(material, size) {
+function createFloorTexture(material, size, tint) {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
-  const baseColor = MATERIALS[material]?.color ?? MATERIALS.sand.color;
+  const baseColor = tint ?? MATERIALS[material]?.color ?? MATERIALS.sand.color;
   const rand = mulberry32(hashString(material));
   const area = size * size;
 
@@ -714,6 +855,56 @@ function createFloorTexture(material, size) {
         ctx.fill();
       }
     }
+  } else if (material === "carpet") {
+    const base = baseColor;
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, size, size);
+    const fiberCount = Math.round(area / 35);
+    for (let i = 0; i < fiberCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const length = randRange(rand, 2, 6);
+      const angle = randRange(rand, 0, Math.PI * 2);
+      const shade = rand() > 0.5 ? 10 : -10;
+      ctx.strokeStyle = adjustColor(base, shade);
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+      ctx.stroke();
+    }
+    const speckleCount = Math.round(area / 70);
+    for (let i = 0; i < speckleCount; i += 1) {
+      const x = rand() * size;
+      const y = rand() * size;
+      const dot = randRange(rand, 0.6, 1.8);
+      const shade = rand() > 0.5 ? 14 : -14;
+      ctx.fillStyle = adjustColor(base, shade);
+      ctx.fillRect(x, y, dot, dot);
+    }
+  } else if (material === "checkerTile") {
+    const primary = baseColor;
+    const white = "#f2f2ee";
+    const half = size / 2;
+    ctx.fillStyle = white;
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = primary;
+    ctx.fillRect(0, 0, half, half);
+    ctx.fillRect(half, half, half, half);
+
+    ctx.strokeStyle = "rgba(170, 170, 165, 0.6)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(half, 0);
+    ctx.lineTo(half, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, half);
+    ctx.lineTo(size, half);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(160, 160, 155, 0.4)";
+    ctx.strokeRect(0.5, 0.5, size - 1, size - 1);
   } else if (material === "dirt") {
     const pebbleCount = Math.round(area / 75);
     for (let i = 0; i < pebbleCount; i += 1) {

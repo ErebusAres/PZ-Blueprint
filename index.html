@@ -26,18 +26,13 @@
           <span class="brand-subtitle">Collaborative Project Zomboid planner</span>
         </div>
       </div>
-      <nav class="top-links" aria-label="Primary">
-        <a class="link" href="#">Docs</a>
-        <a class="link" href="#">Changelog</a>
-        <a class="link" href="#">Feedback</a>
-      </nav>
       <div class="top-actions">
         <div class="rotation">
           <span>Rotation</span>
           <button id="rotate-btn" class="btn ghost" type="button">North</button>
         </div>
-        <button class="btn ghost" type="button">Import</button>
-        <button class="btn primary" type="button">Share</button>
+        <button id="import-btn" class="btn ghost" type="button">Import</button>
+        <button id="share-btn" class="btn primary" type="button">Share</button>
       </div>
     </header>
 
@@ -49,12 +44,21 @@
             <p>Plan safehouse layouts, wall lines, and loot routes.</p>
           </div>
           <div class="canvas-actions">
-            <button class="chip" type="button">Grid On</button>
-            <button class="chip" type="button">Snap On</button>
-            <button id="zoom-out" class="chip" type="button">-</button>
-            <button id="zoom-reset" class="chip" type="button">100%</button>
-            <button id="zoom-in" class="chip" type="button">+</button>
+            <div class="action-group">
+              <button id="undo-btn" class="chip" type="button">Undo</button>
+              <button id="redo-btn" class="chip" type="button">Redo</button>
+            </div>
+            <div class="action-group">
+              <button id="toggle-grid" class="chip is-active" type="button">Grid On</button>
+              <button id="toggle-snap" class="chip is-active" type="button">Snap On</button>
+            </div>
+            <div class="action-group">
+              <button id="zoom-out" class="chip" type="button">-</button>
+              <button id="zoom-reset" class="chip" type="button">100%</button>
+              <button id="zoom-in" class="chip" type="button">+</button>
+            </div>
             <button id="toggle-ui" class="chip" type="button">Toggle UI</button>
+            <button id="help-btn" class="chip help-chip" type="button" aria-label="Help">?</button>
             <div class="toolbar mode-toolbar" id="toolbar" aria-label="Mode selection">
               <div class="mode-row">
                 <button id="mode-cursor" class="tool-button is-active" data-mode="cursor" type="button" data-tooltip="Cursor - Pan" aria-label="Cursor">
@@ -113,8 +117,22 @@
                 </button>
               </div>
               <div class="toolbar-footer">
-                <div class="toolbar-chip">50 x 50</div>
-                <div class="toolbar-chip">Tile 40px</div>
+                <button id="grid-size" class="toolbar-chip" type="button">50 x 50</button>
+                <div class="toolbar-chip is-static">Tile 40px</div>
+              </div>
+              <div class="grid-size-popover is-hidden" id="grid-size-popover" role="dialog" aria-label="Grid size">
+                <div class="grid-size-field">
+                  <label for="grid-rows">Rows</label>
+                  <input id="grid-rows" type="number" min="5" max="200" value="50" />
+                </div>
+                <div class="grid-size-field">
+                  <label for="grid-cols">Columns</label>
+                  <input id="grid-cols" type="number" min="5" max="200" value="50" />
+                </div>
+                <div class="grid-size-actions">
+                  <button id="grid-apply" class="chip" type="button">Apply</button>
+                  <button id="grid-cancel" class="chip" type="button">Cancel</button>
+                </div>
               </div>
             </div>
           </div>
@@ -134,15 +152,37 @@
         </div>
 
         <div class="canvas-footer">
-          <div id="mode-indicator">Mode: Cursor</div>
-          <div class="canvas-tip">Tip: switch tools to edit, use cursor to pan.</div>
+          <div class="footer-left">
+            <div id="mode-indicator">Mode: Cursor</div>
+            <div class="canvas-tip">Tip: switch tools to edit, use cursor to pan.</div>
+          </div>
+          <div class="footer-right">
+            <div class="status-chip" id="status-grid">Grid: 50 x 50</div>
+            <div class="status-chip" id="status-zoom">Zoom: 100%</div>
+            <div class="minimap">
+              <canvas id="minimap" width="120" height="120"></canvas>
+            </div>
+          </div>
         </div>
       </section>
 
       <aside class="inspector" id="inspector">
+        <div class="panel" id="search-section" style="--delay: 0.02s">
+          <div class="panel-header">
+            <h2>Quick Find</h2>
+          </div>
+          <div class="panel-body">
+            <input id="palette-search" class="palette-search" type="search" placeholder="Search tiles, walls, furniture" aria-label="Search palettes" />
+          </div>
+        </div>
+
         <div class="panel" id="material-section" style="--delay: 0.05s">
-          <h2>Floor Palette</h2>
-          <div class="palette-grid">
+          <div class="panel-header">
+            <h2>Floor Palette</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="palette-grid">
             <button class="palette-item" data-material="asphalt" type="button">
               <span class="swatch"></span>
               <span class="label">Asphalt</span>
@@ -154,6 +194,10 @@
             <button class="palette-item" data-material="brick" type="button">
               <span class="swatch"></span>
               <span class="label">Brick</span>
+            </button>
+            <button class="palette-item" data-material="carpet" type="button">
+              <span class="swatch"></span>
+              <span class="label">Carpet: Tile</span>
             </button>
             <button class="palette-item" data-material="concrete" type="button">
               <span class="swatch"></span>
@@ -203,6 +247,10 @@
               <span class="swatch"></span>
               <span class="label">Sidewalk</span>
             </button>
+            <button class="palette-item" data-material="checkerTile" type="button">
+              <span class="swatch"></span>
+              <span class="label">Tile: Checker</span>
+            </button>
             <button class="palette-item" data-material="water" type="button">
               <span class="swatch"></span>
               <span class="label">Water</span>
@@ -215,27 +263,32 @@
               <span class="swatch"></span>
               <span class="label">Wood: Plank</span>
             </button>
+            </div>
           </div>
         </div>
 
         <div class="panel" id="blend-section" style="--delay: 0.08s">
-          <h2>Blend Mode</h2>
-          <div class="blend-mode-grid">
+          <div class="panel-header">
+            <h2>Blend Mode</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="blend-mode-grid">
             <button class="chip blend-toggle is-active" data-blend-mode="none" type="button">None</button>
             <button class="chip blend-toggle" data-blend-mode="diag-manual" type="button">Diagonal Manual</button>
             <button class="chip blend-toggle" data-blend-mode="quarter-manual" type="button">Quarter Manual</button>
             <button class="chip blend-toggle" data-blend-mode="diag-auto" type="button">Diagonal Auto</button>
-          </div>
+            </div>
 
-          <div id="blend-diagonal-controls" class="blend-controls is-hidden">
+            <div id="blend-diagonal-controls" class="blend-controls is-hidden">
             <span class="blend-label">Diagonal</span>
             <div class="blend-control-grid">
               <button class="chip blend-toggle is-active" data-blend-diagonal="slash" type="button">/</button>
               <button class="chip blend-toggle" data-blend-diagonal="backslash" type="button">\</button>
             </div>
-          </div>
+            </div>
 
-          <div id="blend-quarter-controls" class="blend-controls is-hidden">
+            <div id="blend-quarter-controls" class="blend-controls is-hidden">
             <span class="blend-label">Quarter</span>
             <div class="blend-control-grid">
               <button class="chip blend-toggle is-active" data-blend-quarter="tl" type="button">A</button>
@@ -243,9 +296,9 @@
               <button class="chip blend-toggle" data-blend-quarter="bl" type="button">C</button>
               <button class="chip blend-toggle" data-blend-quarter="br" type="button">D</button>
             </div>
-          </div>
+            </div>
 
-          <div id="blend-secondary-section" class="blend-secondary is-hidden">
+            <div id="blend-secondary-section" class="blend-secondary is-hidden">
             <h3>Blend With</h3>
             <div class="palette-grid blend-grid">
               <button class="palette-item" data-blend-material="asphalt" type="button">
@@ -259,6 +312,10 @@
               <button class="palette-item" data-blend-material="brick" type="button">
                 <span class="swatch"></span>
                 <span class="label">Brick</span>
+              </button>
+              <button class="palette-item" data-blend-material="carpet" type="button">
+                <span class="swatch"></span>
+                <span class="label">Carpet: Tile</span>
               </button>
               <button class="palette-item" data-blend-material="concrete" type="button">
                 <span class="swatch"></span>
@@ -308,6 +365,10 @@
                 <span class="swatch"></span>
                 <span class="label">Sidewalk</span>
               </button>
+              <button class="palette-item" data-blend-material="checkerTile" type="button">
+                <span class="swatch"></span>
+                <span class="label">Tile: Checker</span>
+              </button>
               <button class="palette-item" data-blend-material="water" type="button">
                 <span class="swatch"></span>
                 <span class="label">Water</span>
@@ -321,12 +382,43 @@
                 <span class="label">Wood: Plank</span>
               </button>
             </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel is-hidden" id="tile-color-section" style="--delay: 0.12s">
+          <div class="panel-header">
+            <h2>Tile Colors</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="color-controls">
+            <div class="color-control" data-color-material="carpet">
+              <div class="color-label">Carpet Tile</div>
+              <div class="color-input-row">
+                <input id="carpet-color" type="color" value="#b0372f" />
+                <span class="color-value" id="carpet-color-value">#b0372f</span>
+              </div>
+            </div>
+            <div class="color-control" data-color-material="checkerTile">
+              <div class="color-label">Checker Tile</div>
+              <div class="color-input-row">
+                <input id="checker-color" type="color" value="#3b6ed8" />
+                <span class="color-value" id="checker-color-value">#3b6ed8</span>
+              </div>
+              <div class="color-note">Replaces the blue squares.</div>
+            </div>
+            </div>
           </div>
         </div>
 
         <div class="panel is-hidden" id="wall-section" style="--delay: 0.1s">
-          <h2>Wall Types</h2>
-          <div class="palette-grid">
+          <div class="panel-header">
+            <h2>Wall Types</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="palette-grid">
             <button class="palette-item" data-wall="logWall" type="button">
               <span class="swatch"></span>
               <span class="label">Log Wall</span>
@@ -347,12 +439,17 @@
               <span class="swatch"></span>
               <span class="label">Wood Fence</span>
             </button>
+            </div>
           </div>
         </div>
 
         <div class="panel is-hidden" id="door-section" style="--delay: 0.15s">
-          <h2>Door Types</h2>
-          <div class="palette-grid">
+          <div class="panel-header">
+            <h2>Door Types</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="palette-grid">
             <button class="palette-item" data-door="fenceGate" type="button">
               <span class="swatch"></span>
               <span class="label">Fence Gate</span>
@@ -369,12 +466,17 @@
               <span class="swatch"></span>
               <span class="label">Stall Door</span>
             </button>
+            </div>
           </div>
         </div>
 
         <div class="panel is-hidden" id="furniture-section" style="--delay: 0.2s">
-          <h2>Furniture</h2>
-          <div class="palette-grid furniture-grid">
+          <div class="panel-header">
+            <h2>Furniture</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
+          </div>
+          <div class="panel-body">
+            <div class="palette-grid furniture-grid">
             <button class="palette-item" data-furniture="bathroomCounter" type="button">
               <span class="swatch"></span>
               <span class="label">Bathroom Counter</span>
@@ -503,38 +605,101 @@
               <span class="swatch"></span>
               <span class="label">Wood Counter</span>
             </button>
+            </div>
           </div>
         </div>
 
-        <div class="panel" style="--delay: 0.3s">
-          <h2>Legend</h2>
-          <div class="legend">
-            <div class="legend-item">
-              <span class="legend-swatch floor-default"></span>
-              Floor
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch wall-swatch"></span>
-              Wall
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch door-swatch"></span>
-              Door
-            </div>
-            <div class="legend-item">
-              <span class="legend-swatch furniture-swatch"></span>
-              Furniture
-            </div>
+        <div class="panel" id="properties-section" style="--delay: 0.3s">
+          <div class="panel-header">
+            <h2>Properties</h2>
+            <button class="panel-toggle" data-panel-toggle type="button" aria-expanded="true">-</button>
           </div>
-          <div class="selected">
-            <div class="selected-label">Selected</div>
-            <div id="selected-name">Sand Floor</div>
+          <div class="panel-body">
+            <div class="properties-grid">
+              <div class="property-item">
+                <span class="property-label">Mode</span>
+                <span class="property-value" id="property-mode">Cursor</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">Selected</span>
+                <span class="property-value" id="selected-name">Sand Floor</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">Rotation</span>
+                <span class="property-value" id="property-rotation">0 deg</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">Blend</span>
+                <span class="property-value" id="property-blend">None</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">Grid</span>
+                <span class="property-value" id="property-grid">50 x 50</span>
+              </div>
+              <div class="property-item">
+                <span class="property-label">Zoom</span>
+                <span class="property-value" id="property-zoom">100%</span>
+              </div>
+            </div>
+            <button id="clear-all" class="btn subtle" type="button">Clear Blueprint</button>
           </div>
-          <button id="clear-all" class="btn subtle" type="button">Clear Blueprint</button>
         </div>
       </aside>
     </main>
   </div>
+
+  <div class="help-backdrop is-hidden" id="help-backdrop"></div>
+  <div class="help-panel is-hidden" id="help-panel" role="dialog" aria-label="Help">
+    <div class="help-header">
+      <h2>Help</h2>
+      <button id="help-close" class="chip" type="button">Close</button>
+    </div>
+    <div class="help-body">
+      <div class="help-section">
+        <h3>Legend</h3>
+        <div class="legend">
+          <div class="legend-item">
+            <span class="legend-swatch floor-default"></span>
+            Floor
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch wall-swatch"></span>
+            Wall
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch door-swatch"></span>
+            Door
+          </div>
+          <div class="legend-item">
+            <span class="legend-swatch furniture-swatch"></span>
+            Furniture
+          </div>
+        </div>
+      </div>
+      <div class="help-section">
+        <h3>Tips</h3>
+        <ul class="help-list">
+          <li>Use Cursor mode to pan the canvas.</li>
+          <li>Hold to paint floors and drag for rooms.</li>
+          <li>Walls and doors snap to tile edges.</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h3>Shortcuts</h3>
+        <ul class="help-list">
+          <li>R: rotate selected furniture or tool.</li>
+          <li>Ctrl/Cmd + Z: undo.</li>
+          <li>Ctrl/Cmd + Y: redo.</li>
+        </ul>
+      </div>
+      <div class="help-section">
+        <h3>Sharing</h3>
+        <p>Use Share to copy a link that opens your current build on the live site.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
 
   <script type="module" src="js/app.js"></script>
 </body>

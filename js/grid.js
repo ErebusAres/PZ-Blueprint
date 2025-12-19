@@ -1,4 +1,4 @@
-import { ROWS, COLS, currentMode } from "./state.js";
+import { gridRows, gridCols, currentMode } from "./state.js";
 import { handleFloorClick, resetFloorPaintSession } from "./floors.js";
 import { handleWallClick } from "./walls.js";
 import { handleDoorClick } from "./doors.js";
@@ -13,6 +13,7 @@ const DOOR_SPAN = 0.6;
 
 let activePointerId = null;
 let previewEl = null;
+let listenersAttached = false;
 
 export function initializeGrid() {
   const container = document.getElementById("grid");
@@ -20,11 +21,11 @@ export function initializeGrid() {
 
   container.innerHTML = "";
   container.style.display = "grid";
-  container.style.gridTemplateColumns = `repeat(${COLS}, 40px)`;
-  container.style.gridTemplateRows = `repeat(${ROWS}, 40px)`;
+  container.style.gridTemplateColumns = `repeat(${gridCols}, 40px)`;
+  container.style.gridTemplateRows = `repeat(${gridRows}, 40px)`;
 
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
+  for (let row = 0; row < gridRows; row++) {
+    for (let col = 0; col < gridCols; col++) {
       const tile = document.createElement("div");
       tile.className = "tile";
       tile.dataset.row = row;
@@ -33,11 +34,14 @@ export function initializeGrid() {
     }
   }
 
-  container.addEventListener("pointerdown", onPointerDown);
-  container.addEventListener("pointermove", onPointerMove);
-  container.addEventListener("pointerup", onPointerEnd);
-  container.addEventListener("pointercancel", onPointerEnd);
-  document.addEventListener("mode-changed", clearEdgePreview);
+  if (!listenersAttached) {
+    container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("pointermove", onPointerMove);
+    container.addEventListener("pointerup", onPointerEnd);
+    container.addEventListener("pointercancel", onPointerEnd);
+    document.addEventListener("mode-changed", clearEdgePreview);
+    listenersAttached = true;
+  }
 
   function onPointerDown(e) {
     clearEdgePreview();

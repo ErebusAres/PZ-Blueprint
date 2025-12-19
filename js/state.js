@@ -1,8 +1,10 @@
-﻿export const ROWS = 50;
-export const COLS = 50;
+export let gridRows = 50;
+export let gridCols = 50;
 
 export let currentMode = "cursor";
 export let currentMaterial = "sand";
+export let carpetColor = "#B0372F";
+export let checkerColor = "#3B6ED8";
 export let currentFurniture = "bed";
 export let currentWallType = "standard";
 export let currentDoorType = "standard";
@@ -28,6 +30,14 @@ export function setMode(mode) {
 
 export function setMaterial(material) {
   currentMaterial = material;
+}
+
+export function setCarpetColor(color) {
+  carpetColor = color;
+}
+
+export function setCheckerColor(color) {
+  checkerColor = color;
 }
 
 export function setFurniture(kind) {
@@ -69,4 +79,9 @@ export function setBlendDiagonal(variant) {
 
 export function setBlendQuarter(corner) {
   blendQuarter = corner;
+}
+
+export function setGridSize(rows, cols) {
+  gridRows = rows;
+  gridCols = cols;
 }

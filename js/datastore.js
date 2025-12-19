@@ -2,11 +2,22 @@
 import { setBlueprintData } from "./state.js";
 
 const store = [];
+const history = [JSON.stringify(store)];
+const future = [];
+let isRestoring = false;
 
 // ---- internal helpers ----
 function sync() {
   setBlueprintData([...store]);
   renderBlueprint(store);
+  if (!isRestoring) {
+    history.push(JSON.stringify(store));
+    if (history.length > 60) {
+      history.shift();
+    }
+    future.length = 0;
+  }
+  document.dispatchEvent(new CustomEvent("blueprint-changed"));
 }
 
 function keyOf(item) {
@@ -68,6 +79,61 @@ export const dataStore = {
 
     sync();
     return Promise.resolve({ isOk: true, item });
+  },
+
+  replaceAll(items) {
+    store.length = 0;
+    for (const item of items) {
+      store.push(item);
+    }
+    history.length = 0;
+    history.push(JSON.stringify(store));
+    future.length = 0;
+    isRestoring = true;
+    sync();
+    isRestoring = false;
+    return Promise.resolve({ isOk: true, count: store.length });
+  },
+
+  canUndo() {
+    return history.length > 1;
+  },
+
+  canRedo() {
+    return future.length > 0;
+  },
+
+  undo() {
+    if (history.length <= 1) {
+      return { isOk: false };
+    }
+    const current = history.pop();
+    future.push(current);
+    const previous = history[history.length - 1];
+    isRestoring = true;
+    store.length = 0;
+    for (const item of JSON.parse(previous)) {
+      store.push(item);
+    }
+    sync();
+    isRestoring = false;
+    return { isOk: true };
+  },
+
+  redo() {
+    if (future.length === 0) {
+      return { isOk: false };
+    }
+    const next = future.pop();
+    history.push(next);
+    isRestoring = true;
+    store.length = 0;
+    for (const item of JSON.parse(next)) {
+      store.push(item);
+    }
+    sync();
+    isRestoring = false;
+    return { isOk: true };
   }
 };
 

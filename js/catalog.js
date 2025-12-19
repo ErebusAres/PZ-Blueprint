@@ -13,6 +13,8 @@ export const MATERIALS = {
   bathroom: { name: "Bathroom", color: "#D9E1E4" },
   kitchen: { name: "Kitchen", color: "#E4DAC6" },
   water: { name: "Water", color: "#4A90E2" },
+  carpet: { name: "Carpet: Tile", color: "#B0372F" },
+  checkerTile: { name: "Tile: Checker", color: "#3B6ED8" },
   concreteBlock: { name: "Sidewalk", color: "#BCB9B3" },
   parkingLot: { name: "Parking Lot", color: "#84807A" },
   asphalt: { name: "Asphalt", color: "#656565" },
